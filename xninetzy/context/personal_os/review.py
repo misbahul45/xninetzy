@@ -34,7 +34,7 @@ def generate_review(period: str = "weekly") -> ReviewRun:
         period=period,
         generated_at=_now(),
         active_projects=tuple(p.project_id for p in active),
-        open_loops=tuple(l.loop_id for l in open_loops),
+        open_loops=tuple(loop.loop_id for loop in open_loops),
         stalled_projects=stalled,
         recommendations=tuple(recommendations),
     )

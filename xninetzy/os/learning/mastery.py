@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from xninetzy.schemas.learning_session import (
     AttemptRecord,
     ConceptMastery,
-    MASTERY_STATES,
 )
 
 

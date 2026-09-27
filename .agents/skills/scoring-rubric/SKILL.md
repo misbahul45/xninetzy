@@ -2,10 +2,10 @@
 name: scoring-rubric
 description: Normalize and apply competition/scoring rubrics. Produce per-criterion evaluation sheet with weighted scores and threshold checks. Activates whenever quantitative scoring drives selection.
 metadata:
-  scope: xninetzy
-  intent_class: PROPOSAL
-  consumes: requirement-coverage
-  produces: rubric_score
+  scope: "xninetzy"
+  intent_class: "PROPOSAL"
+  consumes: "requirement-coverage"
+  produces: "rubric_score"
   tier: "0"
 ---
 

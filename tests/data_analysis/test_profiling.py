@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import csv
-import os
-import tempfile
 from pathlib import Path
 
 from openpyxl import Workbook

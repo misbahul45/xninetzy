@@ -19,6 +19,7 @@ from xninetzy.os.research.sources.rate_limit import (
     RateLimiter,
     retry_async,
 )
+from xninetzy.os.research.sources.query_match import matches_query
 from xninetzy.os.research.sources.registry import (
     build_breaker,
     build_rate_limiter,
@@ -98,7 +99,6 @@ class ArbeitNowAdapter(SourceAdapter):
         data = payload.get("data") if isinstance(payload, dict) else None
         if not isinstance(data, list):
             return []
-        q = (query or "").strip().lower()
         records: list[SourceRecord] = []
         for entry in data:
             if not isinstance(entry, dict):
@@ -107,7 +107,7 @@ class ArbeitNowAdapter(SourceAdapter):
             company = (entry.get("company_name") or "").lower()
             tags = " ".join(entry.get("tags") or []).lower()
             haystack = f"{title} {company} {tags}"
-            if q and q not in haystack:
+            if not matches_query(query, haystack):
                 continue
             try:
                 records.append(_record_from_job(entry))

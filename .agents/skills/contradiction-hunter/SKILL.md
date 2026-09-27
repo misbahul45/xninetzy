@@ -1,13 +1,12 @@
 ---
 name: contradiction-hunter
 description: Detect contradicting findings across a research result set. Identifies
-  claims where independent sources disagree, and surfaces the disagreement for synthesis.
 metadata:
-  type: meta
-  layer: research-orchestration
-  consumes: '["evidence-grader"]'
-  produces: '["contradictions"]'
-  tier: '0'
+  type: "meta"
+  layer: "research-orchestration"
+  consumes: "'[\"evidence-grader\"]'"
+  produces: "'[\"contradictions\"]'"
+  tier: "'0'"
 ---
 
 

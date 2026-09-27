@@ -15,8 +15,8 @@ from xninetzy.integrations.tableau.ir import (
 
 
 _DATATYPE_MAP = {
-    "integer": "BIG_INT",
-    "real": "DOUBLE",
+    "integer": "BIGINT",
+    "real": "FLOAT",
     "string": "VARCHAR",
     "boolean": "BOOLEAN",
     "date": "DATE",
@@ -79,7 +79,8 @@ def extract_csv_to_hyper(
     columns = profile.columns
 
     try:
-        HyperProcess, TableName = _import_hyper()
+        HyperProcess, TableName, Telemetry = _import_hyper()
+        from tableauhyperapi import Connection, CreateMode, Inserter
     except TableauIntegrationError:
         if dst.exists():
             dst.unlink()
@@ -99,20 +100,32 @@ def extract_csv_to_hyper(
 
     rows_written = 0
     try:
-        with HyperProcess(Telemetry.DisableTelemetry) as hyper:
-            with hyper.connection() as connection:
-                connection.execute_command(f'CREATE SCHEMA IF NOT EXISTS "{schema_name}"')
+        with HyperProcess(Telemetry.DO_NOT_SEND_USAGE_DATA_TO_TABLEAU) as hyper:
+            connection = Connection(
+                endpoint=hyper.endpoint,
+                database=str(dst),
+                create_mode=CreateMode.CREATE,
+            )
+            try:
+                if not connection.catalog.get_schema_names().__contains__(schema_name):
+                    connection.catalog.create_schema(schema_name)
                 create_sql = _build_create_sql(table_name, schema_name, columns)
                 connection.execute_command(create_sql)
                 table_def = TableName(schema_name, table_name)
                 rows_to_insert = _read_rows(src, columns, row_limit)
-                with connection.execute_insertion(table_def) as insert:
+                inserter = Inserter(connection, table_def)
+                try:
                     for row in rows_to_insert:
-                        insert.execute_list([_row_to_hyper_values(row, columns)])
+                        inserter.add_row(_row_to_hyper_values(row, columns))
+                    inserter.execute()
+                finally:
+                    inserter.close()
                 row_count_result = connection.execute_list_query(
                     f'SELECT COUNT(*) FROM "{schema_name}"."{table_name}"'
                 )
                 rows_written = int(row_count_result[0][0]) if row_count_result else 0
+            finally:
+                connection.close()
 
         size_bytes = dst.stat().st_size if dst.exists() else 0
     except Exception as exc:
@@ -192,6 +205,7 @@ def validate_hyper(extract_path: str | Path) -> dict[str, Any]:
         raise _hyper_unavailable()
 
     HyperProcess, _, Telemetry = _import_hyper()
+    from tableauhyperapi import Connection, CreateMode
 
     info: dict[str, Any] = {
         "extract_path": str(p),
@@ -200,14 +214,21 @@ def validate_hyper(extract_path: str | Path) -> dict[str, Any]:
         "tables": [],
     }
     try:
-        with HyperProcess(Telemetry.DisableTelemetry) as hyper:
-            with hyper.connection() as connection:
+        with HyperProcess(Telemetry.DO_NOT_SEND_USAGE_DATA_TO_TABLEAU) as hyper:
+            connection = Connection(
+                endpoint=hyper.endpoint,
+                database=str(p),
+                create_mode=CreateMode.NONE,
+            )
+            try:
                 rows = connection.execute_list_query(
-                    "SELECT table_schema, table_name FROM information_schema.tables "
-                    "WHERE table_schema NOT IN ('pg_catalog', 'information_schema')"
+                    "SELECT schemaname, tablename FROM pg_catalog.pg_tables "
+                    "WHERE schemaname NOT IN ('pg_catalog', 'information_schema')"
                 )
                 for schema_name, table_name in rows:
                     info["tables"].append({"schema": schema_name, "table": table_name})
+            finally:
+                connection.close()
         info["valid"] = True
     except Exception as exc:
         raise TableauIntegrationError(

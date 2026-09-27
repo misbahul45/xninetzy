@@ -1,6 +1,3 @@
-Kalau maksudmu **improve skill PDF ini agar lebih robust untuk agent/coding agent**, saya akan ubah dari sekadar instruksi workflow menjadi **production-grade PDF skill**: ada decision tree, visual QA loop, failure handling, typography, accessibility, reproducibility, dan hard quality gates.
-
-````yaml
 ---
 name: "pdf"
 description: "Use for reading, extracting, creating, editing, reviewing, validating, or transforming PDF files when content, structure, typography, tables, images, or page layout matter. Prefer programmatic extraction for content understanding and rendered-page inspection for visual fidelity. Use reportlab for new PDF generation and pypdf/pdfplumber for inspection and manipulation where appropriate."

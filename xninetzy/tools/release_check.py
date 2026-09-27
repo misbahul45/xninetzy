@@ -172,6 +172,7 @@ _CANONICAL_FINAL_TOOLS = (
     "hebat_upload_submission",
     "portal_krs_war_arm",
     "qa_fill_kuesioner",
+    "tableau_publish_workbook",
 )
 
 

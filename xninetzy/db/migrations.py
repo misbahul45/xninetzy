@@ -1459,6 +1459,76 @@ def _migrate_capability_registry(conn) -> None:
             updated_by TEXT NOT NULL DEFAULT 'system'
         )
         """,
+        """
+        CREATE TABLE IF NOT EXISTS career_applications (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            application_key TEXT NOT NULL UNIQUE,
+            posting_id TEXT NOT NULL,
+            sender_id TEXT NOT NULL,
+            status TEXT NOT NULL,
+            notes TEXT NOT NULL DEFAULT '',
+            history_json TEXT NOT NULL DEFAULT '[]',
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+        )
+        """,
+        "CREATE INDEX IF NOT EXISTS idx_career_apps_sender ON career_applications(sender_id, updated_at)",
+        "CREATE INDEX IF NOT EXISTS idx_career_apps_posting ON career_applications(posting_id)",
+        """
+        CREATE TABLE IF NOT EXISTS career_confirmation_tokens (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            token TEXT NOT NULL UNIQUE,
+            application_key TEXT NOT NULL,
+            posting_id TEXT NOT NULL,
+            sender_id TEXT NOT NULL,
+            target_status TEXT NOT NULL,
+            issued_at TEXT NOT NULL,
+            expires_at TEXT NOT NULL,
+            consumed_at TEXT,
+            consumed_for_status TEXT
+        )
+        """,
+        "CREATE INDEX IF NOT EXISTS idx_career_tokens_app ON career_confirmation_tokens(application_key)",
+        """
+        CREATE TABLE IF NOT EXISTS career_outcomes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            application_key TEXT NOT NULL,
+            posting_id TEXT NOT NULL,
+            source TEXT NOT NULL,
+            outcome TEXT NOT NULL,
+            reason TEXT,
+            recorded_at TEXT NOT NULL
+        )
+        """,
+        "CREATE INDEX IF NOT EXISTS idx_career_outcomes_app ON career_outcomes(application_key)",
+        "CREATE INDEX IF NOT EXISTS idx_career_outcomes_source ON career_outcomes(source)",
+        """
+        CREATE TABLE IF NOT EXISTS career_source_quality (
+            source TEXT PRIMARY KEY,
+            postings_total INTEGER NOT NULL DEFAULT 0,
+            outcomes_total INTEGER NOT NULL DEFAULT 0,
+            interviews_total INTEGER NOT NULL DEFAULT 0,
+            offers_total INTEGER NOT NULL DEFAULT 0,
+            rejects_total INTEGER NOT NULL DEFAULT 0,
+            quality_score REAL NOT NULL DEFAULT 0.5,
+            updated_at TEXT NOT NULL
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS career_browser_sessions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id TEXT NOT NULL UNIQUE,
+            application_key TEXT NOT NULL,
+            posting_id TEXT NOT NULL,
+            sender_id TEXT NOT NULL,
+            posting_url TEXT NOT NULL,
+            state TEXT NOT NULL DEFAULT 'open',
+            opened_at TEXT NOT NULL,
+            closed_at TEXT,
+            last_inspected_at TEXT
+        )
+        """,
+        "CREATE INDEX IF NOT EXISTS idx_career_browser_app ON career_browser_sessions(application_key)",
     ]
     for statement in statement_groups:
         conn.execute(statement)

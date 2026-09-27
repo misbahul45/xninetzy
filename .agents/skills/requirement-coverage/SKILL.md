@@ -2,10 +2,10 @@
 name: requirement-coverage
 description: Map competition/RFP requirements to draft sections, compute weighted coverage score, surface unaddressed requirements. Activates when a competition ruleset or rubric exists and must be matched.
 metadata:
-  intent_class: PROPOSAL
-  consumes: scoring-rubric
-  produces: coverage_report
-  tier: 0
+  intent_class: "PROPOSAL"
+  consumes: "scoring-rubric"
+  produces: "coverage_report"
+  tier: "0"
 ---
 
 # Requirement Coverage

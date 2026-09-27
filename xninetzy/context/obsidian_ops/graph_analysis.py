@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-import re
 import uuid
 from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 from xninetzy.context.obsidian_ops.vault_health import (
     _extract_wikilinks,

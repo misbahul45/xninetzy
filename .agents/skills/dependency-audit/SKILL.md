@@ -1,60 +1,7 @@
-
-
+---
 name: "dependency-audit"
-
 description: "Evidence-driven dependency and software supply-chain audit for direct and transitive packages. Reviews manifests, lockfiles, dependency graphs, known vulnerabilities, license policy, provenance, package integrity, maintainership signals, reachability, exploitability context, and remediation risk within explicitly authorized scope. Use when dependencies are added, removed, upgraded, downgraded, lockfiles change, advisories affect used packages, or the operator requests a dependency surface review."
-
-metadata:
-            author: "xninetzy"
-            version: "2.0.0"
-            scope: "domain"
-            priority: "P1"
-
-required_tools:
-- r---
-po_dependency
-- security_dependencies
-- security_scope
-- security_validate_finding
-- lightning_record_action
-
-optional_tools:
-- repo_search
-- repo_symbol
-- repo_diff
-- repo_history
-- security_assets
-- security_supply_chain
-- security_license
-- security_reachability
-- hitl_request_approval
-- os_inbox
-- memory_security_store
-
-trigger_conditions:
-- a dependency is added
-- a dependency is upgraded
-- a dependency is downgraded
-- a dependency is removed
-- the lockfile changes
-- a package manager configuration changes
-- a new security advisory affects a used package
-- the operator asks whether a dependency is safe
-- the operator requests dependency inventory or supply-chain review
-- a package provenance or integrity signal changes
-
-prerequisites:
-- local manifest or lockfile is reachable
-- dependency scope is known
-- explicit security scope exists before external advisory/package queries
-- package-manager ecosystem is identifiable
-
-escalation_routes:
-            application_security: "security-review"
-            infrastructure: "xninetzy-security-testing"
-            API_surface: "api-security"
-            architecture_impact: "architecture-analysis"
-------------------------------------------
+---
 
 # dependency-audit
 

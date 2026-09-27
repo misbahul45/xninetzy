@@ -31,7 +31,10 @@ async def test_deliver_persists_to_owner_inbox(monkeypatch, tmp_path):
         captured.append({"text": text, "kind": kind, "chat_id": chat_id})
         return ({}, True)
 
-    monkeypatch.setattr(cd, "_persist_captcha_inbox", lambda *args, **kwargs: True)
+    async def _persist_ok(*args, **kwargs):
+        return True
+
+    monkeypatch.setattr(cd, "_persist_captcha_inbox", _persist_ok)
     monkeypatch.setattr(cd, "capture_item", fake_capture, raising=False)
     monkeypatch.setattr(cd, "_open_local", lambda p: None)
 
@@ -54,7 +57,10 @@ async def test_deliver_persists_to_owner_inbox(monkeypatch, tmp_path):
 
 @pytest.mark.asyncio
 async def test_deliver_falls_back_to_mcp_image_when_inbox_unavailable(monkeypatch, tmp_path):
-    monkeypatch.setattr(cd, "_persist_captcha_inbox", lambda *args, **kwargs: False)
+    async def _persist_fail(*args, **kwargs):
+        return False
+
+    monkeypatch.setattr(cd, "_persist_captcha_inbox", _persist_fail)
     monkeypatch.setattr(cd, "_open_local", lambda p: None)
 
     result = await cd.deliver_captcha(
@@ -73,7 +79,10 @@ async def test_deliver_falls_back_to_mcp_image_when_inbox_unavailable(monkeypatc
 
 @pytest.mark.asyncio
 async def test_deliver_uses_default_owner_when_chat_id_missing(monkeypatch, tmp_path):
-    monkeypatch.setattr(cd, "_persist_captcha_inbox", lambda *args, **kwargs: True)
+    async def _persist_ok(*args, **kwargs):
+        return True
+
+    monkeypatch.setattr(cd, "_persist_captcha_inbox", _persist_ok)
     monkeypatch.setattr(cd, "_open_local", lambda p: None)
     monkeypatch.setattr(cd, "get_settings", lambda: SimpleNamespace(OWNER_CHAT_ID=""))
 
@@ -111,7 +120,11 @@ def _mock_coordinator(monkeypatch, tmp_path):
     monkeypatch.setattr(portal_tools.LOGIN_COORDINATOR, "start", fake_start)
     monkeypatch.setattr(portal_tools.LOGIN_COORDINATOR, "captcha_png", fake_captcha_png)
     monkeypatch.setattr(portal_tools, "get_settings", lambda: _portal_settings(tmp_path))
-    monkeypatch.setattr(cd, "_persist_captcha_inbox", lambda *args, **kwargs: True)
+
+    async def _persist_ok(*args, **kwargs):
+        return True
+
+    monkeypatch.setattr(cd, "_persist_captcha_inbox", _persist_ok)
     monkeypatch.setattr(cd, "_open_local", lambda p: None)
 
 

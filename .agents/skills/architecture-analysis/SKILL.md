@@ -1,6 +1,7 @@
-name: architecture-analysis
-
-
+---
+name: "architecture-analysis"
+description: "architecture-analysis skill (description pending manual review)."
+---
 
 description: >
 Evidence-driven static architectural analysis for repositories. Builds module,

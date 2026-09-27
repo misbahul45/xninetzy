@@ -2,9 +2,9 @@
 name: tableau-workbook-builder
 description: Build Tableau .twb / .twbx workbooks declaratively from CSV inputs via the xninetzy Tableau integration. Use when the user asks for a Tableau dashboard, .twb generation, Tableau storyboard, or wants to compile KPIs / maps / heatmaps without opening Tableau Desktop.
 metadata:
-  domain: tableau
-  inputs: csv_paths, visualization_specs, optional template
-  outputs: twb_file_in_workspace, optional twbx_archive
+  domain: "tableau"
+  inputs: "csv_paths, visualization_specs, optional template"
+  outputs: "twb_file_in_workspace, optional twbx_archive"
   tier: "2"
 ---
 
@@ -161,3 +161,67 @@ serialization. It also flags stale `C:\` Windows paths.
 - Integration tests live at `tests/integrations/tableau/`; they pin the
   current behaviour of the parser, compiler, validator, packager, and
   registry wiring.
+
+## Hyper extract + publish pipeline (Phase 9-23)
+
+When the user wants real `.hyper` columnar extracts (instead of CSV-bound
+textscan datasources) or to ship a workbook to a live Tableau server, the
+following extras are available. They depend on `tableauhyperapi` and
+`tableauserverclient` — install via `pip install 'xninetzy-mcp[tableau]'`.
+
+```python
+from xninetzy.tools.ecosystem.tableau_tools import (
+    tableau_infer_schema,    # READ tier 0
+    tableau_profile_dataset, # READ tier 0
+    tableau_hyper_create,    # WRITE tier 1
+    tableau_validate_hyper,  # READ tier 0
+    tableau_publish_workbook,# FINAL tier 3, HITL required
+    tableau_refresh_workbook,# WRITE tier 1, idempotent
+    tableau_list_workbooks,  # READ tier 0
+)
+```
+
+Schema inference + typed Hyper extract:
+
+```python
+schema = tableau_infer_schema.invoke({"csv_path": "/data/orders.csv"})
+profile = tableau_profile_dataset.invoke({"csv_path": "/data/orders.csv"})
+extract = tableau_hyper_create.invoke({
+    "csv_path": "/data/orders.csv",
+    "name": "orders",
+})
+info = tableau_validate_hyper.invoke({"extract_path": extract["path"]})
+```
+
+Publish to a Tableau Server (requires owner approval):
+
+```python
+tableau_publish_workbook.invoke({
+    "workbook_path": result["path"],
+    "target": {
+        "server_url": "https://tableau.example.com",
+        "site_id": "mysite",
+        "project": "default",
+        "token_name": "<PAT_NAME>",
+        "token_secret": "<PAT_SECRET>",
+    },
+    "mode": "Append",
+})
+```
+
+Refresh + inventory are tier-1 / tier-0 and do not require HITL.
+
+## Failure modes (Hyper + Server)
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `TABLEAU_DEPENDENCY_MISSING` | `tableauhyperapi` or `tableauserverclient` not installed | `pip install 'xninetzy-mcp[tableau]'` |
+| `PUBLISH_AUTH_REQUIRED` | empty `token_name` or `token_secret` | supply Personal Access Token credentials |
+| `PUBLISH_PERMISSION_DENIED` | site role lacks publish right on target project | raise role or pick another project |
+| `PUBLISH_RATE_LIMITED` / `PUBLISH_TIMEOUT` | transient | tool retries up to 3x with exponential backoff |
+| `REFRESH_FAILED` | workbook id missing on server | run `tableau_list_workbooks` to resolve id |
+| `ARTIFACT_NOT_FOUND` | workbook path or Hyper path does not exist | verify path before invoking |
+
+Token secrets never appear in tool outputs — `_REDACT_KEYS` covers
+`token_secret`, `password`, `credentials`, and
+`personal_access_token_secret` recursively.

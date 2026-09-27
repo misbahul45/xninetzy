@@ -19,7 +19,7 @@ _ROUTING_TABLE: dict[SourceCategory, tuple[str, ...]] = {
     SourceCategory.CODE: ("github",),
     SourceCategory.DATASET: ("huggingface", "zenodo", "kaggle"),
     SourceCategory.NEWS: ("hackernews", "reddit", "rss"),
-    SourceCategory.COMPANY: ("remoteok", "arbeitnow"),
+    SourceCategory.COMPANY: ("remoteok", "arbeitnow", "kalibrr", "glints", "dealls", "jobstreet_id"),
     SourceCategory.MODEL: ("huggingface",),
     SourceCategory.BENCHMARK: ("papers_with_code", "open_llm_leaderboard"),
     SourceCategory.SECURITY: ("nvd",),

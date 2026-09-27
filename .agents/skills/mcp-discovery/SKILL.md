@@ -1,13 +1,12 @@
 ---
 name: mcp-discovery
 description: Discover MCP servers for a given capability need. Searches official registry,
-  GitHub, and awesome-mcp lists. Outputs ranked list with health + security notes.
 metadata:
-  type: workflow
-  layer: mcp-ecosystem
-  consumes: '["research_search (via web_search fallback)","research_fetch","evidence-grader"]'
-  produces: '["mcp_shortlist"]'
-  tier: '0'
+  type: "workflow"
+  layer: "mcp-ecosystem"
+  consumes: "'[\"research_search (via web_search fallback)\",\"research_fetch\",\"evidence-grader\"]'"
+  produces: "'[\"mcp_shortlist\"]'"
+  tier: "'0'"
 ---
 
 

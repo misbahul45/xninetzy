@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import pytest
@@ -372,7 +371,7 @@ def test_finalize_pending_ab_test_returns_result():
         "xninetzy.context.learning.experiment_engine",
         fromlist=["create_ab_test", "record_observation", "ExperimentOutcome"],
     )
-    test = create_ab_test.create_ab_test(
+    create_ab_test.create_ab_test(
         test_id="t1",
         baseline="a",
         candidate="b",

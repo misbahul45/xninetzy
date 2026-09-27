@@ -19,7 +19,7 @@ host (Claude / Claude Code / Cursor / Codex / OpenCode)
   ▼
 xninetzy.interfaces.mcp_server   ─── FastMCP("xninetzy", ...)
   │
-  ├── xninetzy.tools.registry.get_all_tools()   (446 tools)
+  ├── xninetzy.tools.registry.get_all_tools()   (508 tools)
   │     │
   │     └── xninetzy.tools.manifest.manifest_for(name)
   │           ├── feature_pack: core | academic-unair | research | coding
@@ -62,16 +62,16 @@ canonical FINAL-tool set drifts.
 
 | Metric | Value |
 |---|---|
-| Total tools | **455** |
-| Risk = `read` | 26 |
-| Risk = `draft` | 13 |
-| Risk = `write` | 413 |
-| Risk = `final` | **3** |
-| Feature pack = `core` | 363 |
+| Total tools | **502** |
+| Risk = `read` | 30 |
+| Risk = `draft` | 19 |
+| Risk = `write` | 455 |
+| Risk = `final` | **4** |
+| Feature pack = `core` | 416 |
 | Feature pack = `academic-unair` | 46 |
 | Feature pack = `research` | 43 |
 | Feature pack = `coding` | 3 |
-| Stability | 455/455 `stable` |
+| Stability | 508/508 `stable` |
 
 Risk classifier (`xninetzy/os/policy/action_policy.py::classify_risk`):
 
@@ -87,12 +87,13 @@ so an owner-supplied tier downgrade cannot demote a `final` tool
 
 ## FINAL-class tools
 
-These three tools always require HITL approval server-side:
+These tools always require HITL approval server-side:
 
 1. `hebat_upload_submission` (alias-mapped from
    `hebat_submit_submission` in `xninetzy/tools/manifest.py`)
 2. `portal_krs_war_arm`
 3. `qa_fill_kuesioner`
+4. `tableau_publish_workbook` (publishes a workbook to a Tableau server)
 
 Approval is enforced through `xninetzy/os/hitl/approval_service.py`
 (`request_approval`, `set_approval_status`, `validate_approval`).
@@ -240,7 +241,7 @@ Six checks must all PASS:
 
 | Check | Verifies |
 |---|---|
-| `tool_registry` | 455 tools classified, no unknown risk, no missing idempotency |
+| `tool_registry` | 508 tools classified, no unknown risk, no missing idempotency |
 | `secret_redaction` | `redact_secrets` strips sample OpenAI / GitHub / Google keys |
 | `safe_fetch` | SSRF guard rejects non-http(s), private/loopback, oversize |
 | `transport_config` | transport ∈ stdio\|streamable-http; default loopback |

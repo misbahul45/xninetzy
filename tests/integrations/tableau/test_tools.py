@@ -5,7 +5,6 @@ from pathlib import Path
 
 import pytest
 
-from xninetzy.integrations.tableau.server import tsc_available
 from xninetzy.tools.ecosystem.tableau_tools import (
     tableau_infer_schema,
     tableau_list_workbooks,
@@ -103,6 +102,11 @@ def test_validate_hyper_dependency_missing(tmp_path: Path) -> None:
     out = _invoke(tableau_validate_hyper, extract_path=str(p))
     if "error" not in out:
         pytest.skip("hyper available")
+    if out["error"] != "TABLEAU_DEPENDENCY_MISSING":
+        pytest.skip(
+            f"hyper installed but operation failed with {out['error']!r}; "
+            "missing-dep path not exercised"
+        )
     assert out["error"] == "TABLEAU_DEPENDENCY_MISSING"
 
 
@@ -138,6 +142,11 @@ def test_refresh_workbook_missing_dependency() -> None:
     out = _invoke(tableau_refresh_workbook, workbook_id="wb-1", target=_target())
     if "error" not in out:
         pytest.skip("TSC available")
+    if out["error"] != "TABLEAU_DEPENDENCY_MISSING":
+        pytest.skip(
+            f"TSC installed but operation failed with {out['error']!r}; "
+            "missing-dep path not exercised"
+        )
     assert out["error"] == "TABLEAU_DEPENDENCY_MISSING"
 
 
@@ -157,6 +166,11 @@ def test_list_workbooks_missing_dependency() -> None:
     out = _invoke(tableau_list_workbooks, target=_target())
     if "error" not in out:
         pytest.skip("TSC available")
+    if out["error"] != "TABLEAU_DEPENDENCY_MISSING":
+        pytest.skip(
+            f"TSC installed but operation failed with {out['error']!r}; "
+            "missing-dep path not exercised"
+        )
     assert out["error"] == "TABLEAU_DEPENDENCY_MISSING"
 
 

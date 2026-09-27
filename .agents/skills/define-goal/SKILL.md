@@ -1,57 +1,7 @@
-
-
+---
 name: "define-goal"
-
 description: "Goal-definition control plane for converting intentions, requests, projects, learning objectives, research questions, and operational needs into concrete, bounded, measurable, evidence-verifiable outcomes. Use before significant work when success, acceptance, scope, or stopping conditions are unclear."
-
-metadata:
-  scope: "general"
-  owner: "xninetzy"
-  language: "en"
-  version: "3.0.0"
-  priority: "P1"
-
-lifecycle: "detect -> inspect -> formulate -> measure -> bound -> validate -> reconcile -> version -> create/refine"
-
-required_tools:
-- goal_inspect
-- goal_create
-- goa---
-_update
-
-optional_tools:
-- repo_search
-- repo_symbol
-- repo_diff
-- memory_search
-- memory_goal_store
-- context_retrieve
-- observability_query
-- hitl_request_approval
-- lightning_record_action
-
-trigger_conditions:
-- user explicitly asks to define or create a goal
-- user asks to set an objective
-- user asks what done should mean
-- user asks to turn an intention into a measurable target
-- success criteria are required before significant work begins
-- an existing goal needs refinement
-- scope or acceptance criteria have become ambiguous
-- a project has activity but no explicit outcome contract
-
-prerequisites:
-- user intent is available
-- target domain or affected object is identifiable or safely inferable
-
-routing:
-  execution: "xninetzy-assignment-orchestrator"
-  learning: "it-learning"
-  coaching: "xninetzy-learning-coach"
-  research: "xninetzy-deep-research"
-  personal: "life-management"
-  continuity: "xninetzy-memory"
----------------------------
+---
 
 # Define Goal OS
 

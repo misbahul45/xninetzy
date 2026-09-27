@@ -1,56 +1,7 @@
-
-
+---
 name: "debugging"
-
 description: "Evidence-driven debugging workflow for unexpected runtime behavior, incorrect outputs, failed requests, regressions, flaky tests, race conditions, malformed tool results, and production incidents. Collects reproducible evidence before hypotheses, separates symptom from cause, narrows to a primary root cause with contributing factors, requires controlled falsification, emits the smallest verifiable fix, and closes the loop with regression validation and failure-memory learning."
-
-metadata:
-            author: "xninetzy"
-            version: "2.0.0"
-            scope: "domain"
-            priority: "P1"
-
-required_tools:
-- repo_search
-- repo_s---
-mbol
-- repo_diff
-- observability_query
-- memory_failure_store
-
-optional_tools:
-- repo_test
-- repo_history
-- repo_dependency
-- repo_ownership
-- lightning_record_action
-- hitl_request_approval
-- os_inbox
-- action_policy_evaluate
-
-trigger_conditions:
-- operator reports an unexpected error
-- operator reports incorrect or inconsistent behavior
-- a tool returns an empty or malformed result
-- a metric deviates from baseline
-- a test fails unexpectedly
-- a previously passing behavior regresses
-- behavior is intermittent or flaky
-- the operator asks why X is happening
-- a production or staging incident requires root-cause analysis
-
-prerequisites:
-- failing scenario is reachable by test, command, request, workflow, or observable production event
-- sufficient observability exists for the failing scenario
-- affected code or execution boundary can be inspected
-- execution scope is known
-
-escalation_routes:
-            cross_module_boundary: "architecture-analysis"
-            api_boundary: "api-security"
-            security_signal: "xninetzy-security-testing"
-            deployment_or_infrastructure: "infrastructure-analysis"
------------------------------------------------------
+---
 
 # debugging
 

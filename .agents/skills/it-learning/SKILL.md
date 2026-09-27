@@ -1,17 +1,7 @@
 ---
-
-...
-
-...
 name: "it-learning"
 description: "Evidence-driven learning operating system for IT, software engineering, programming, backend, databases, cloud, DevOps, Docker, system design, cybersecurity, AI agents, RAG, data analytics, machine learning, and adjacent technical domains. Use for goal definition, prerequisite mapping, adaptive roadmaps, study sessions, active recall, deliberate practice, evidence collection, mastery assessment, progress reviews, and next-focus decisions."
-metadata:
-  scope: "general"
-  owner: "xninetzy"
-  language: "en"
-  version: "2.0.0"
-  lifecycle: "target -> diagnose -> map -> plan -> practice -> evidence -> assess -> review -> adapt"
-...
+---
 
 # IT Learning OS
 

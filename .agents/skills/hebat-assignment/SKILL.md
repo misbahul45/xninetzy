@@ -1,65 +1,7 @@
-
-
+---
 name: "hebat-assignment"
-
 description: "Evidence-driven control plane for producing submission-ready HEBAT academic assignments across courses, disciplines, teams, and artifact types. Establishes authoritative requirements, requirement traceability, evidence and claim integrity, argument structure, artifact specifications, content and visual QA, submission readiness, and controlled handoff to specialized execution skills. Use whenever a HEBAT assignment must be understood, produced, reviewed, validated, or prepared for submission."
-
-metadata:
-  owner: "xninetzy"
-  version: "4.0.0"
-  scope: "general"
-  language: "en"
-  priority: "P1"
-  applies_to: "all HEBAT assignments"
-
-lifecycle: "discover -> bind-context -> lock-requirements -> map-evidence -> formulate -> specify-artifact -> produce -> validate -> qa -> package -> handoff"
-
-required_tools:
-- context_retrieve
-- repo_search
-- ---
-ource_search
-- evidence_validate
-
-optional_tools:
-- file_search
-- file_read
-- repo_diff
-- graph_search
-- memory_search
-- goal_inspect
-- goal_create
-- document_create
-- pdf_validate
-- slide_create
-- spreadsheet_create
-- image_create
-- hitl_request_approval
-- lightning_record_action
-
-trigger_conditions:
-- HEBAT assignment requirements must be discovered
-- an assignment brief or rubric must be interpreted
-- an assignment needs research and evidence mapping
-- an academic artifact must be produced
-- a draft must be audited against requirements
-- citation integrity must be checked
-- a document/presentation/poster/prototype package must be validated
-- an assignment is approaching submission readiness
-- a team assignment needs a shared requirement and artifact contract
-
-escalation_routes:
-  LMS/course-retrieval: "hebat-academic"
-  cross-domain-orchestration: "xninetzy-assignment-orchestrator"
-  deep-research: "xninetzy-deep-research"
-  learning-goals: "define-goal"
-  graph-reasoning: "graph-rag"
-  artifact-generation: "xninetzy-artifact-orchestrator"
-  document: "docx"
-  pdf: "pdf"
-  presentation: "slides"
-  spreadsheet: "spreadsheets"
--------------------------
+---
 
 # HEBAT Assignment Control Plane
 

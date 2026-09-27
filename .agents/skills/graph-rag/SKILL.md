@@ -1,60 +1,7 @@
-
-
+---
 name: "graph-rag"
-
 description: "Evidence-grounded graph reasoning control plane for typed relationships across knowledge, concepts, prerequisites, goals, learning activities, notes, research, projects, documents, decisions, and sources. Uses graph traversal only when explicit relationships materially improve retrieval or reasoning beyond text search or vector similarity. Preserves canonical entity identity, provenance, temporal validity, contradiction state, path evidence, and projection consistency."
-
-metadata:
-  scop---
-: "general"
-  owner: "xninetzy"
-  language: "en"
-  version: "3.0.0"
-  priority: "P1"
-
-lifecycle: "detect -> discover -> canonicalize -> validate -> connect -> index -> retrieve -> reason -> explain -> verify -> propose/apply -> audit"
-
-required_tools:
-- graph_search
-- graph_entity
-- graph_relation
-- graph_validate
-- graph_provenance
-
-optional_tools:
-- vector_search
-- repo_search
-- repo_symbol
-- memory_search
-- memory_graph_store
-- document_search
-- source_fetch
-- hitl_request_approval
-- lightning_record_action
-
-trigger_conditions:
-- dependency or prerequisite paths materially improve the answer
-- user asks how entities are related
-- multi-hop reasoning is required
-- a roadmap depends on prerequisite relationships
-- research must be connected to claims or concepts
-- project dependencies need traversal
-- relationship provenance must be inspected
-- graph contradictions or orphan entities need analysis
-- cross-domain reasoning benefits from explicit typed edges
-
-prerequisites:
-- graph-capable source is available or can be constructed
-- target entities can be identified or discovered
-- relationship semantics are known or can be safely established
-
-escalation_routes:
-  academic: "cyber-campus"
-  course_content: "hebat-academic"
-  durable_memory: "xninetzy-memory"
-  research: "xninetzy-deep-research"
-  notes_and_knowledge_base: "xninetzy-obsidian-orchestra"
------------------------------------------------------
+---
 
 # Graph RAG OS
 

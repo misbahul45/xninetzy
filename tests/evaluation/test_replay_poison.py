@@ -61,7 +61,7 @@ def _seed_provider(provider_id: str = "goodprov"):
 
 def test_poisoned_signal_does_not_persist_as_learning():
     """Bad outcomes get confidence 0.3 → IGNORE → not persisted."""
-    summaries = (
+    (
         build_summary("r1", "ok"),
         build_summary("r2", "error"),
     )
@@ -76,7 +76,7 @@ def test_poisoned_signal_does_not_persist_as_learning():
 
 
 def test_bridge_does_not_propose_when_no_failures():
-    summaries = (build_summary("r1", "ok"),)
+    (build_summary("r1", "ok"),)
     batch = extract_signals(
         findings=({"source": "do_thing", "summary": "ok", "confidence": 0.9, "evidence_refs": ("r1",)},)
     )
@@ -93,7 +93,7 @@ def test_bridge_does_not_propose_when_no_failures():
 
 
 def test_bridge_proposes_only_on_real_failure():
-    summaries = (build_summary("r1", "error"),)
+    (build_summary("r1", "error"),)
     batch = extract_signals(
         findings=({"source": "do_thing", "summary": "err", "confidence": 0.3, "evidence_refs": ("r1",)},)
     )

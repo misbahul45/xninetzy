@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-from typing import Any
 
 from langchain_core.tools import tool
 
@@ -13,12 +12,8 @@ from xninetzy.skills.router import (
 )
 from xninetzy.skills.validators import (
     anti_slop,
-    citation_fidelity,
-    evidence_claim_alignment,
-    requirement_coverage,
     run_all,
     submission_readiness_check,
-    terminology_consistency,
 )
 from xninetzy.tools.tool_results import to_tool_result
 

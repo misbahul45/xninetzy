@@ -6,6 +6,15 @@ from functools import lru_cache
 _MAX_CACHE_SIZE: int = 1024
 
 
+_STOPWORDS: frozenset[str] = frozenset(
+    {
+        "a", "an", "the", "and", "or", "to", "for", "of", "in", "on",
+        "with", "without", "please", "tolong", "saya", "aku", "kamu",
+        "ingin", "bisa", "mau", "cara", "how", "what", "is", "do",
+    }
+)
+
+
 @lru_cache(maxsize=_MAX_CACHE_SIZE)
 def tokenize_cached(value: str | None) -> frozenset[str]:
     if not value:
@@ -13,8 +22,9 @@ def tokenize_cached(value: str | None) -> frozenset[str]:
     out: set[str] = set()
     for token in value.lower().replace("/", " ").replace("-", " ").replace(".", " ").split():
         cleaned = "".join(ch for ch in token if ch.isalnum() or ch == "_")
-        if cleaned and len(cleaned) >= 2:
-            out.add(cleaned)
+        if not cleaned or cleaned in _STOPWORDS or len(cleaned) < 2:
+            continue
+        out.add(cleaned)
     return frozenset(out)
 
 

@@ -2,11 +2,11 @@
 name: outline-builder
 description: Generate ordered outlines (section + depth + purpose + word budget) tailored to intent class. Activates when a draft needs structural planning before writing.
 metadata:
-  scope: skill
-  intent_class: TECHNICAL
-  consumes: none
-  produces: outline
-  tier: 0
+  scope: "skill"
+  intent_class: "TECHNICAL"
+  consumes: "none"
+  produces: "outline"
+  tier: "0"
 ---
 
 # Outline Builder

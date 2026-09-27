@@ -1,15 +1,12 @@
 from __future__ import annotations
 
-import time
 from dataclasses import dataclass
 
 from xninetzy.schemas.learning_session import (
     AttemptRecord,
     HintEvent,
-    HINT_LADDER,
     LearningError,
     LearningSession,
-    MASTERY_STATES,
     Misconception,
     PedagogyPolicy,
     next_hint_level,
@@ -57,23 +54,23 @@ def decide_hint(session: LearningSession, error: LearningError | None = None, po
 
 
 def _hint_text(level: int, session: LearningSession, error: LearningError | None) -> str:
-    name = hint_level_name(level)
+    hint_level_name(level)
     concept = session.current_concept_id or session.topic
     if level == 0:
         return f"Try again. Focus on {concept}."
     if level == 1:
-        return f"Restate the task in your own words before solving."
+        return "Restate the task in your own words before solving."
     if level == 2:
         return f"Recall the definition of {concept}."
     if level == 3:
-        return f"Break the problem into sub-steps. Identify the smallest sub-problem first."
+        return "Break the problem into sub-steps. Identify the smallest sub-problem first."
     if level == 4:
-        return f"Strategy hint: start from the constraints, then derive."
+        return "Strategy hint: start from the constraints, then derive."
     if level == 5:
-        return f"Next step: compute the derivative / first logical step."
+        return "Next step: compute the derivative / first logical step."
     if level == 6:
-        return f"Partial solution: [first half of solution]. Continue from there."
-    return f"Full worked solution shown. Now reproduce from memory and explain why each step holds."
+        return "Partial solution: [first half of solution]. Continue from there."
+    return "Full worked solution shown. Now reproduce from memory and explain why each step holds."
 
 
 def record_hint(session: LearningSession, decision: HintDecision, progressed: bool = False) -> HintEvent:

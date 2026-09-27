@@ -45,6 +45,8 @@ export const navigation: NavGroup[] = [
     items: [
       { title: 'Chat model selection', description: 'Host supplies the model; HTTP bridge fallback is optional.', href: '/docs/providers/' },
       { title: 'Global MCP', description: 'Codex, Claude Code, and OpenCode.', href: '/docs/mcp/', badge: 'core' },
+      { title: 'Host CLI injection contract', description: 'Mandatory xninetzy Operating Layer for 12 host CLI agents.', href: '/docs/cli-paksa-mode/', badge: 'new' },
+      { title: 'CLI injection tutorial', description: 'Audit → taxonomy → trigger matrix → patch → test → persist.', href: '/docs/cli-injection-tutorial/', badge: 'new' },
       { title: 'Lightning agent', description: 'Rewards, strategy ranking, and regression.', href: '/docs/lightning/' },
       { title: 'Shared skills', description: 'Built-in and open-source skills across clients.', href: '/docs/skills/', badge: 'updated' }
     ]

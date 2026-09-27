@@ -35,13 +35,19 @@ def test_tool_manifests_have_no_idempotency_gaps() -> None:
     assert not gaps, f"idempotency gap on: {gaps}"
 
 
-def test_final_tools_are_exactly_three_named() -> None:
+def test_final_tools_are_exactly_named() -> None:
     """FINAL risk class is reserved for: hebat_upload_submission,
-    portal_krs_war_arm, qa_fill_kuesioner. Any drift must be intentional."""
+    portal_krs_war_arm, qa_fill_kuesioner, tableau_publish_workbook.
+    Any drift must be intentional."""
     from xninetzy.tools.manifest import manifest_for
     from xninetzy.tools.registry import get_tool_names
 
-    expected = {"hebat_upload_submission", "portal_krs_war_arm", "qa_fill_kuesioner"}
+    expected = {
+        "hebat_upload_submission",
+        "portal_krs_war_arm",
+        "qa_fill_kuesioner",
+        "tableau_publish_workbook",
+    }
     finals: set[str] = set()
     for name in get_tool_names():
         try:

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 import pytest
@@ -54,12 +53,12 @@ def test_open_loop_idempotent_on_title(personal_os: PersonalOS) -> None:
 
 
 def test_open_loop_resolve_removes_from_open_list(personal_os: PersonalOS) -> None:
-    l = personal_os.open_loop(title="ship release")
-    resolved = personal_os.resolve_loop(l.loop_id)
+    loop = personal_os.open_loop(title="ship release")
+    resolved = personal_os.resolve_loop(loop.loop_id)
     assert resolved is not None
     assert resolved.status == LoopStatus.RESOLVED
     open_ids = {x.loop_id for x in personal_os.list_open_loops()}
-    assert l.loop_id not in open_ids
+    assert loop.loop_id not in open_ids
 
 
 def test_skill_register_idempotent_and_advance(personal_os: PersonalOS) -> None:

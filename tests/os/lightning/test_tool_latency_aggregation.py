@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-import json
-from datetime import datetime, timedelta, timezone
 
 import pytest
 
 from xninetzy.db.migrations import run_migrations
-from xninetzy.db.sqlite import connect, init_db
+from xninetzy.db.sqlite import init_db
 from xninetzy.os.lightning.rl import start_episode, record_action, tool_latency_aggregation
 
 

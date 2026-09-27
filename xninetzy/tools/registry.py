@@ -291,11 +291,18 @@ from xninetzy.tools.ecosystem.research_v2_tools import (
     research_search,
 )
 from xninetzy.tools.ecosystem.storm_tools import storm_tools
+from xninetzy.tools.ecosystem.tasks_tools import (
+    tasks_cancel,
+    tasks_complete,
+    tasks_create,
+    tasks_get,
+    tasks_list,
+    tasks_result,
+)
 from xninetzy.tools.ecosystem.learning_companion_tools import learning_companion_tools
 from xninetzy.tools.ecosystem.skill_routing_tools import skill_routing_tools
 from xninetzy.tools.ecosystem.tableau_tools import TABLEAU_TOOLS
 from xninetzy.os.mcp_external.tools import (
-    EXTERNAL_MCP_TOOLS as _EXTERNAL_MCP_TOOLS,
     external_mcp_list_tool,
     external_mcp_shutdown_tool,
     playwright_attach_session_tool,
@@ -312,8 +319,10 @@ from xninetzy.tools.ecosystem.career_tools import (
     career_find_alternative_titles,
     career_find_hidden_jobs,
     career_find_similar_jobs,
+    career_get_application,
     career_get_job,
     career_interview_prep,
+    career_list_applications,
     career_market_skill_trend,
     career_monitor,
     career_resume_analysis,
@@ -324,6 +333,33 @@ from xninetzy.tools.ecosystem.career_tools import (
     career_search_jobs,
     career_skill_gap,
     career_track_application,
+)
+from xninetzy.tools.ecosystem.career_ops_tools import (
+    career_adapter_health,
+    career_capability_revalidate,
+    career_run_eval,
+)
+from xninetzy.tools.ecosystem.career_profile_tools import (
+    career_get_candidate_profile,
+    career_update_candidate_profile,
+)
+from xninetzy.tools.ecosystem.career_application_tools import (
+    career_generate_application_package,
+)
+from xninetzy.tools.ecosystem.career_orchestrator_tools import (
+    career_confirm_application,
+    career_record_application_outcome,
+    career_request_application_change,
+)
+from xninetzy.tools.ecosystem.career_browser_tools import (
+    career_close_application,
+    career_fill_application,
+    career_inspect_application,
+    career_open_application,
+)
+from xninetzy.tools.ecosystem.career_dashboard_tools import (
+    career_observability_dashboard,
+    career_recover_stuck_applications,
 )
 from xninetzy.tools.ecosystem.optimization_tools import (
     deepeval_evaluate,
@@ -560,16 +596,24 @@ _ALL_TOOLS: list[BaseTool] | None = None
 
 
 def refresh_external_mcp_tools() -> int:
-    """Reset cached registry so newly added external MCP tools are picked up."""
+    """Reset cached registry so newly added external MCP tools are picked up.
+
+    Only re-sync the tools exposed by ``interfaces.external_mcp`` (the user
+    registry adapter). Tools from ``os.mcp_external.tools`` (playwright
+    bridge + external_mcp_list_tool / external_mcp_shutdown_tool) are
+    imported unconditionally into this module and must NOT be removed by
+    the refresh path — using ``startswith("external_mcp_")`` as a filter
+    would also drop them, which is a real bug.
+    """
     global _ALL_TOOLS
     from xninetzy.interfaces.external_mcp import EXTERNAL_MCP_TOOLS
 
     new_external = list(EXTERNAL_MCP_TOOLS)
+    new_external_names = {tool.name for tool in new_external}
     if _ALL_TOOLS is not None:
-        existing_external = {
-            tool.name for tool in _ALL_TOOLS if tool.name.startswith(("external_mcp_",))
-        }
-        filtered = [tool for tool in _ALL_TOOLS if tool.name not in existing_external]
+        filtered = [
+            tool for tool in _ALL_TOOLS if tool.name not in new_external_names
+        ]
         _ALL_TOOLS = filtered + new_external
     return len(new_external)
 
@@ -856,8 +900,31 @@ def get_all_tools() -> list[BaseTool]:
             career_find_hidden_jobs,
             career_monitor,
             career_track_application,
+            career_list_applications,
+            career_get_application,
             career_interview_prep,
             career_resume_analysis,
+            career_adapter_health,
+            career_capability_revalidate,
+            career_run_eval,
+            career_get_candidate_profile,
+            career_update_candidate_profile,
+            career_generate_application_package,
+            career_request_application_change,
+            career_confirm_application,
+            career_record_application_outcome,
+            career_open_application,
+            career_inspect_application,
+            career_fill_application,
+            career_close_application,
+            career_observability_dashboard,
+            career_recover_stuck_applications,
+            tasks_create,
+            tasks_get,
+            tasks_list,
+            tasks_cancel,
+            tasks_complete,
+            tasks_result,
             dspy_optimize_prompt,
             dspy_compile,
             deepeval_evaluate,
@@ -1275,7 +1342,7 @@ def get_tool_groups() -> dict[str, list[str]]:
             "youtube_search",
         ],
         "tasks": [
-            "tasks_submit",
+            "tasks_create",
             "tasks_get",
             "tasks_cancel",
             "tasks_list",
@@ -1296,8 +1363,25 @@ def get_tool_groups() -> dict[str, list[str]]:
             "career_find_hidden_jobs",
             "career_monitor",
             "career_track_application",
+            "career_list_applications",
+            "career_get_application",
             "career_interview_prep",
             "career_resume_analysis",
+            "career_adapter_health",
+            "career_capability_revalidate",
+            "career_run_eval",
+            "career_get_candidate_profile",
+            "career_update_candidate_profile",
+            "career_generate_application_package",
+            "career_request_application_change",
+            "career_confirm_application",
+            "career_record_application_outcome",
+            "career_open_application",
+            "career_inspect_application",
+            "career_fill_application",
+            "career_close_application",
+            "career_observability_dashboard",
+            "career_recover_stuck_applications",
         ],
         "graph": ["graph_search", "graph_get_context", "graph_explain_topic_map"],
         "skills": [

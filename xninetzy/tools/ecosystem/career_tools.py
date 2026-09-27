@@ -10,9 +10,53 @@ from langchain_core.tools import tool
 
 from xninetzy.db.migrations import run_migrations
 from xninetzy.db.sqlite import connect
+from xninetzy.domains.career.intent import parse_intent
+from xninetzy.domains.career.services import (
+    normalize_location,
+    rank_records,
+    score_quality,
+)
+from xninetzy.os.career.applications_store import (
+    ApplicationStore,
+    VALID_STATUSES,
+)
 from xninetzy.os.research.router import RouteRequest, route_sources
 from xninetzy.os.research.sources import SourceCategory, SourceRecord, get_adapter
 from xninetzy.tools.tool_results import to_tool_result
+
+
+_APPLICATIONS_STORE = ApplicationStore()
+
+
+def _application_key(sender_id: str, posting_id: str) -> str:
+    return f"{sender_id or ''}::{posting_id}"
+
+
+def _serialize_application(record: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "application_key": record.get("application_key"),
+        "posting_id": record.get("posting_id"),
+        "sender_id": record.get("sender_id"),
+        "status": record.get("status"),
+        "notes": record.get("notes", ""),
+        "created_at": record.get("created_at"),
+        "updated_at": record.get("updated_at"),
+        "history": record.get("history", []),
+    }
+
+
+def _location_hint(record: SourceRecord) -> str:
+    identifiers = record.identifiers or {}
+    for key in ("location", "region", "country"):
+        value = identifiers.get(key)
+        if isinstance(value, str) and value.strip():
+            return value
+    snippet = record.snippet or ""
+    for token in snippet.split():
+        cleaned = token.strip(",.;:()[]{}").lower()
+        if len(cleaned) == 2 and cleaned.isalpha():
+            return cleaned.upper()
+    return ""
 
 
 def _now_iso() -> str:
@@ -66,7 +110,7 @@ def _emit_record_step(plan_id: str, tool_name: str, outcome: str, args: dict[str
 
 
 def _record_to_dict(record: SourceRecord) -> dict[str, Any]:
-    return {
+    base = {
         "id": (record.identifiers or {}).get("remoteok_id")
             or (record.identifiers or {}).get("arbeitnow_slug")
             or record.url.rsplit("/", 1)[-1],
@@ -78,6 +122,14 @@ def _record_to_dict(record: SourceRecord) -> dict[str, Any]:
         "snippet": record.snippet,
         "identifiers": dict(record.identifiers),
     }
+    location = normalize_location(_location_hint(record), record.identifiers or {})
+    base["location_normalized"] = {
+        "country_code": location.country_code,
+        "region": location.region,
+        "is_remote": location.is_remote,
+    }
+    base["quality_score"] = round(score_quality(record), 4)
+    return base
 
 
 def _dedupe_jobs(records: list[SourceRecord]) -> list[SourceRecord]:
@@ -257,12 +309,32 @@ def career_search_jobs(
         return to_tool_result(json.dumps({"status": "error", "error": str(exc)}, ensure_ascii=False))
     deduped = _dedupe_jobs(merged)
     record_dicts = [_record_to_dict(r) for r in deduped[: max(1, limit)]]
+    intent = parse_intent(
+        query,
+        country=country,
+        work_mode=work_mode,
+        posted_within_days=posted_within_days,
+    )
+    record_dicts = rank_records(
+        record_dicts,
+        intent_terms=intent.role_terms,
+        intent_country=intent.country_code,
+        intent_work_mode=intent.work_mode,
+    )
     result_payload = {
         "query": query,
         "filters": {
             "country": country or None,
             "work_mode": work_mode if work_mode != "any" else None,
             "posted_within_days": posted_within_days or None,
+        },
+        "intent": {
+            "role_terms": list(intent.role_terms),
+            "detected_country": intent.country_code,
+            "detected_work_mode": intent.work_mode,
+            "detected_seniority": intent.seniority,
+            "detected_employment": intent.employment_type,
+            "needs_sampling": intent.needs_sampling,
         },
         "results": record_dicts,
         "sources_used": [a.id for a in adapters],
@@ -1151,10 +1223,13 @@ def career_track_application(
     chat_id: str = "system",
     idempotency_key: str = "",
 ) -> str:
-    """Persist an application-status update into owner-scoped memory.
+    """Persist an application-status update into the owner-scoped application store.
+
+    Status transitions are idempotent per (sender_id, posting_id): repeated calls
+    append to a history trail rather than creating new rows.
 
     Args:
-        posting_id: Posting identifier.
+        posting_id: Posting identifier (RemoteOK id, ArbeitNow slug, etc.).
         status: drafted | applied | phone_screen | interviewed | offer | rejected | withdrawn.
         notes: Free-text notes.
         sender_id: Owner principal.
@@ -1169,30 +1244,111 @@ def career_track_application(
         "sender_id": sender_id,
         "notes_chars": len(notes),
     }
-    valid = {"drafted", "applied", "phone_screen", "interviewed", "offer", "rejected", "withdrawn"}
-    if status not in valid:
-        return to_tool_result(json.dumps({
-            "status": "error",
-            "error": f"invalid status; expected one of {sorted(valid)}",
-        }, ensure_ascii=False))
-    record_value = {
-        "posting_id": posting_id,
-        "status": status,
-        "notes": notes,
-        "updated_at": _now_iso(),
-    }
+    if status not in VALID_STATUSES:
+        out = {
+            "status_flag": "error",
+            "posting_id": posting_id,
+            "error": f"invalid status; expected one of {sorted(VALID_STATUSES)}",
+        }
+        if plan_id:
+            _emit_record_step(plan_id, "career_track_application", "error", {**payload, "error": out["error"]})
+        return to_tool_result(json.dumps(out, ensure_ascii=False))
+    try:
+        record = _APPLICATIONS_STORE.record(
+            application_key=_application_key(sender_id, posting_id),
+            posting_id=posting_id,
+            sender_id=sender_id,
+            status=status,
+            notes=notes,
+            now=datetime.now(timezone.utc),
+        )
+    except Exception as exc:
+        out = {
+            "status_flag": "error",
+            "posting_id": posting_id,
+            "error": str(exc),
+        }
+        if plan_id:
+            _emit_record_step(plan_id, "career_track_application", "error", {**payload, "error": str(exc)})
+        return to_tool_result(json.dumps(out, ensure_ascii=False))
     out = {
-        "posting_id": posting_id,
-        "status": status,
-        "recorded_at": record_value["updated_at"],
-        "scope": "career_applications",
-        "owner": sender_id or None,
-        "retrieve_via": "memory_search(scope='career_applications')",
         "status_flag": "ok",
+        "application": _serialize_application(record),
     }
     if plan_id:
         _emit_checkpoint(plan_id, step_id or "career_track_application", "ok", payload)
         _emit_record_step(plan_id, "career_track_application", "ok", payload)
+    return to_tool_result(json.dumps(out, ensure_ascii=False))
+
+
+@tool
+def career_list_applications(
+    sender_id: str = "",
+    limit: int = 20,
+    plan_id: str = "",
+    step_id: str = "",
+    chat_id: str = "system",
+    idempotency_key: str = "",
+) -> str:
+    """List the owner's tracked applications, most recent first.
+
+    Args:
+        sender_id: Owner principal.
+        limit: Max rows returned (default 20).
+        plan_id: Harness plan id.
+        step_id: Harness step id.
+        chat_id: Chat ID.
+        idempotency_key: Optional idempotency key.
+    """
+    payload = {"sender_id": sender_id, "limit": limit}
+    records = _APPLICATIONS_STORE.list_by_sender(sender_id, limit=limit)
+    out = {
+        "status_flag": "ok",
+        "applications": [_serialize_application(r) for r in records],
+        "total": len(records),
+    }
+    if plan_id:
+        _emit_checkpoint(plan_id, step_id or "career_list_applications", "ok", payload)
+        _emit_record_step(plan_id, "career_list_applications", "ok", payload)
+    return to_tool_result(json.dumps(out, ensure_ascii=False))
+
+
+@tool
+def career_get_application(
+    posting_id: str,
+    sender_id: str = "",
+    plan_id: str = "",
+    step_id: str = "",
+    chat_id: str = "system",
+    idempotency_key: str = "",
+) -> str:
+    """Fetch a single tracked application by (sender_id, posting_id).
+
+    Args:
+        posting_id: Posting identifier.
+        sender_id: Owner principal.
+        plan_id: Harness plan id.
+        step_id: Harness step id.
+        chat_id: Chat ID.
+        idempotency_key: Optional idempotency key.
+    """
+    payload = {"posting_id": posting_id, "sender_id": sender_id}
+    record = _APPLICATIONS_STORE.get(sender_id, posting_id)
+    if record is None:
+        out = {
+            "status_flag": "not_found",
+            "posting_id": posting_id,
+        }
+        if plan_id:
+            _emit_checkpoint(plan_id, step_id or "career_get_application", "not_found", payload)
+        return to_tool_result(json.dumps(out, ensure_ascii=False))
+    out = {
+        "status_flag": "ok",
+        "application": _serialize_application(record),
+    }
+    if plan_id:
+        _emit_checkpoint(plan_id, step_id or "career_get_application", "ok", payload)
+        _emit_record_step(plan_id, "career_get_application", "ok", payload)
     return to_tool_result(json.dumps(out, ensure_ascii=False))
 
 
@@ -1323,6 +1479,8 @@ career_tools = [
     career_find_hidden_jobs,
     career_monitor,
     career_track_application,
+    career_list_applications,
+    career_get_application,
     career_interview_prep,
     career_resume_analysis,
 ]

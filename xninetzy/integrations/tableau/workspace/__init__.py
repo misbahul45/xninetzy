@@ -45,7 +45,9 @@ def templates_root(override: Path | None = None) -> Path:
     if env := os.environ.get(TEMPLATES_ENV):
         root = Path(expand_path(env))
     else:
-        root = _output_root() / "tableau" / "templates"
+        repo = Path(__file__).resolve().parents[3] / "templates" / "tableau"
+        output = _output_root() / "tableau" / "templates"
+        root = repo if repo.is_dir() else output
     root.mkdir(parents=True, exist_ok=True)
     return root
 
@@ -74,7 +76,7 @@ def resolve_template_path(name: str, workspace: Path | None = None) -> Path:
     if env:
         candidates.append(Path(expand_path(env)))
     candidates.append(_output_root() / "tableau" / "templates")
-    repo = Path(__file__).resolve().parents[2] / "templates" / "tableau"
+    repo = Path(__file__).resolve().parents[3] / "templates" / "tableau"
     candidates.append(repo)
     if workspace is not None:
         candidates.append(workspace / "templates")

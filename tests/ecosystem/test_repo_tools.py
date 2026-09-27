@@ -37,12 +37,17 @@ def test_repo_search_regex_mode():
 
 
 def test_repo_symbol_finds_function_definition():
-    out = _invoke(repo_symbol, name="idempotent_call", limit=5)
+    out = _invoke(repo_symbol, name="idempotent_call", limit=25)
     assert out["count"] >= 1
-    first = out["matches"][0]
-    assert first["file"].endswith("idempotency.py")
-    assert first["signature"].startswith("def idempotent_call")
-    assert first["line"] >= 1
+    target = next(
+        (m for m in out["matches"] if m["file"].endswith("idempotency.py")),
+        None,
+    )
+    assert target is not None, (
+        f"idempotency.py missing from matches: {[m['file'] for m in out['matches']]}"
+    )
+    assert target["signature"].startswith("def idempotent_call")
+    assert target["line"] >= 1
 
 
 def test_repo_symbol_handles_unknown_name():

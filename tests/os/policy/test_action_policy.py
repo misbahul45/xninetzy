@@ -20,6 +20,54 @@ def test_policy_auto_for_read_and_draft(monkeypatch, tmp_path):
     assert evaluate_action("learning_prepare_plan").risk is RiskClass.DRAFT
 
 
+def test_career_lookup_tools_classify_as_read():
+    from xninetzy.os.policy.action_policy import classify_risk
+
+    for action in (
+        "career_find_similar_jobs",
+        "career_find_alternative_titles",
+        "career_find_hidden_jobs",
+        "career_extract_requirements",
+    ):
+        assert classify_risk(action) is RiskClass.READ, f"{action} should be READ"
+
+
+def test_career_analysis_tools_classify_as_draft():
+    from xninetzy.os.policy.action_policy import classify_risk
+
+    for action in (
+        "career_skill_gap",
+        "career_market_skill_trend",
+        "career_salary_analysis",
+        "career_company_research",
+        "career_interview_prep",
+        "career_resume_analysis",
+    ):
+        assert classify_risk(action) is RiskClass.DRAFT, f"{action} should be DRAFT"
+
+
+def test_career_manifest_overrides_match_effective_risk():
+    from xninetzy.os.policy.action_policy import classify_risk
+    from xninetzy.tools.manifest import manifest_for
+
+    for name in (
+        "career_find_similar_jobs",
+        "career_find_alternative_titles",
+        "career_find_hidden_jobs",
+        "career_extract_requirements",
+        "career_skill_gap",
+        "career_market_skill_trend",
+        "career_salary_analysis",
+        "career_company_research",
+        "career_interview_prep",
+        "career_resume_analysis",
+    ):
+        manifest = manifest_for(name)
+        assert manifest.risk is classify_risk(name), (
+            f"{name}: manifest risk {manifest.risk} must match classify_risk"
+        )
+
+
 def test_final_action_cannot_be_auto(monkeypatch):
     monkeypatch.setenv("ACTION_POLICY_DEFAULT_MODE", "auto")
     get_settings.cache_clear()

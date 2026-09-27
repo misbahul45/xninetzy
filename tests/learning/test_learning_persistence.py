@@ -12,7 +12,6 @@ from xninetzy.context.learning.benchmark_engine import (
     reset_benchmark_registry,
 )
 from xninetzy.context.learning.evolution_engine import (
-    EvolutionProposal,
     evolution_state,
     get_proposal,
     propose_evolution,
@@ -20,8 +19,6 @@ from xninetzy.context.learning.evolution_engine import (
     transition_proposal,
 )
 from xninetzy.context.learning.experiment_engine import (
-    ABTest,
-    ABTestResult,
     ExperimentOutcome,
     clear_tests,
     create_ab_test,

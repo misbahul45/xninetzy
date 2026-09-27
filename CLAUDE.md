@@ -20,19 +20,11 @@ language: en
 # 1. What this project is
 
 Xninetzy is a **single-purpose MCP server** — **Xninetzy Intelligence
-<<<<<<< Updated upstream
 MCP** — exposing tool groups defined by `xninetzy/tools/registry.py`
 (Research, Career, Business, AI, Security, Developer, Data, Trend, MCP)
 over one shared engine (router, planner, source registry, cache,
 deduplication, entity-resolution, evidence, citation, security). The
-v2.2.0 pivot removed the Baileys
-=======
-MCP** — exposing many sibling domains (Research, Career, Business, AI,
-Security, Developer, Data, Trend, MCP) over one shared engine (router,
-planner, source registry, cache, deduplication, entity-resolution,
-evidence, citation, security). The v2.2.0 pivot removed the Baileys
->>>>>>> Stashed changes
-WhatsApp engine, the Ink CLI, the LangGraph conversational agent, and
+v2.2.0 pivot removed the Baileys WhatsApp engine, the Ink CLI, the LangGraph conversational agent, and
 every host-bridge / chat-failover / autonomous-coding reference. There
 is **no server-side agent loop**. Clients do their own reasoning and
 call MCP tools.
@@ -133,7 +125,7 @@ Skill frontmatter integrity is enforced by
 
 ## 6b. MCP resources & prompts
 
-The MCP server exposes 2 resources and 1 prompt in addition to the 408
+The MCP server exposes 2 resources and 1 prompt in addition to the 491
 tools (see `xninetzy/interfaces/mcp_server.py`; count via
 `python -c "from xninetzy.tools.registry import get_tool_names; print(len(get_tool_names()))"`):
 
@@ -232,16 +224,10 @@ Three tools extend S6 harness:
 
 # 7f. Career Intelligence Domain
 
-<<<<<<< Updated upstream
 Xninetzy positioning is **Xninetzy Intelligence MCP** — tool groups
 defined by `xninetzy/tools/registry.py` (Research, Career, Business, AI,
 Security, Developer, Data, Trend, MCP) sharing one engine (router,
 planner, source-registry,
-=======
-Xninetzy positioning is **Xninetzy Intelligence MCP** — many sibling
-domains (Research, Career, Business, AI, Security, Developer, Data,
-Trend, MCP) sharing one engine (router, planner, source-registry,
->>>>>>> Stashed changes
 cache, deduplication, entity-resolution, evidence, citation, security).
 
 Career is the second shipped domain after Research. Source adapters
@@ -250,11 +236,7 @@ Phase-1 legal free public APIs only: RemoteOK, ArbeitNow. No scraping
 of LinkedIn, Indeed, JobStreet, Glints, or walled-garden sites.
 
 - Tools: 17 in `xninetzy/tools/ecosystem/career_tools.py` (all tier 0)
-<<<<<<< Updated upstream
 - Skill bodies: 19 under `.agents/skills/career/`
-=======
-- Skill bodies: 14 under `.agents/skills/career/`
->>>>>>> Stashed changes
 
 # 8. Authority hierarchy
 

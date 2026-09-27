@@ -121,6 +121,7 @@ def test_build_authorization_url_validates_against_policy() -> None:
         state="abc",
         code_challenge="xyz",
         scopes=("openid", "email"),
+        client_id_override="test-client",
     )
     assert "accounts.google.com" in url
     assert "code_challenge=xyz" in url
@@ -194,3 +195,65 @@ def test_provider_adapters_loaded() -> None:
     assert {"kaggle", "google", "github"}.issubset(names)
     assert get_provider_adapter("kaggle") is not None
     assert get_provider_adapter("google") is not None
+
+
+def test_hybrid_provider_metadata_exposed() -> None:
+    by_id = {p.provider_id: p for p in list_providers()}
+    assert by_id["kaggle"].preferred_method == "api_token"
+    assert "api_token" in by_id["kaggle"].fallback_methods
+    assert "oauth" in by_id["kaggle"].fallback_methods
+    assert by_id["kaggle"].api_token_env == ("KAGGLE_USERNAME", "KAGGLE_KEY")
+    adapters_by_id = {a.provider_id: a for a in list_provider_adapters()}
+    for pid in ("kaggle", "google", "github"):
+        assert adapters_by_id[pid].extra.get("hybrid") is True
+        assert "primary_method" in adapters_by_id[pid].extra
+        assert "fallback_methods" in adapters_by_id[pid].extra
+
+
+def test_build_authorization_url_requires_client_id(monkeypatch) -> None:
+    from xninetzy.os.auth.oauth.providers import OAuthConfigError
+
+    monkeypatch.delenv("XNINETZY_KAGGLE_CLIENT_ID", raising=False)
+    try:
+        build_authorization_url(get_provider("kaggle"), state="abc")
+    except OAuthConfigError as exc:
+        assert "XNINETZY_KAGGLE_CLIENT_ID" in str(exc)
+    else:
+        raise AssertionError("expected OAuthConfigError")
+    url = build_authorization_url(
+        get_provider("kaggle"),
+        state="abc",
+        client_id_override="override-id",
+    )
+    assert "client_id=override-id" in url
+
+
+def test_callback_server_binds_and_receives_code() -> None:
+    import time
+    import urllib.request
+
+    from xninetzy.os.auth.oauth.callback_server import (
+        callback_server_status,
+        start_callback_server,
+        stop_callback_server,
+    )
+
+    received: list[dict] = []
+
+    async def handler(result):
+        received.append(result.to_safe_dict())
+        return {"status": "ok"}
+
+    bound = start_callback_server(handler)
+    try:
+        assert callback_server_status()["running"] is True
+        assert bound.redirect_uri.startswith("http://127.0.0.1:")
+        url = bound.redirect_uri + "?code=fake&state=test-state"
+        resp = urllib.request.urlopen(url, timeout=5)
+        assert resp.status == 200
+        time.sleep(0.5)
+        assert received and received[0]["code"] == "fake"
+        assert received[0]["state"] == "test-state"
+    finally:
+        stop_callback_server()
+    assert callback_server_status()["running"] is False

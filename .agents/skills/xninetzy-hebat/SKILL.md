@@ -1,14 +1,7 @@
 ---
-
-...
-
-...
 name: "xninetzy-hebat"
 description: "Safely retrieve HEBAT/Moodle courses, assignments, deadlines, materials, and submission state, and prepare confirmed submissions."
-metadata:
-  owner: "xninetzy"
-  version: "1.0.0"
-...
+---
 
 # HEBAT
 

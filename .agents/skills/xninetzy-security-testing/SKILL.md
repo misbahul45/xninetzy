@@ -1,32 +1,7 @@
-
-
+---
 name: "xninetzy-security-testing"
-description: 
-  ---
-Authorized security assessment and self-pentesting control-plane for Xninetzy MCP.
-   Orchestrates open-source reconnaissance, attack-surface discovery, HTTP/API security
-   testing, DAST, SAST, SCA, secret scanning, container/image analysis, IaC scanning,
-   Kubernetes security checks, cloud posture assessment, TLS analysis, mobile assessment,
-   evidence correlation, regression verification, and audit reporting for explicitly
-   authorized owner-controlled assets. Never expands scope silently, never bypasses
-   authentication or human verification, never performs destructive exploitation, and
-   never treats scanner output as confirmed evidence without validation.
-metadata:
-            owner: "misbahul45"
-            scope: "project"
-authority:
-   - AGENTS.md
-   - global opencode AGENTS.md
-interfaces:
-- mcp
-- http-mcp-bridge
-language: "en"
-version: "2.0.0"
-added: "2026-09-18"
-domain: "xninetzy.domains.security"
-lifecycle: >
-intake -> normalize -> authorize -> isolate -> discover -> enumerate ->
-analyze -> correlate -> validate -> prioritize -> report -> regress -> learn
+description: "xninetzy-security-testing skill (description pending manual review)."
+---
 
 # Xninetzy Security Testing
 

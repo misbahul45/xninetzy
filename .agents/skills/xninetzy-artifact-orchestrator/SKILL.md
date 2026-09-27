@@ -1,69 +1,7 @@
-
-
+---
 name: "xninetzy-artifact-orchestrator"
-
 description: "Artifact-production control plane for creating, integrating, validating, versioning, and delivering documents, PDFs, presentations, spreadsheets, diagrams, reports, and multi-file deliverable packages. Establishes artifact identity, requirements, source/evidence traceability, information architecture, bounded production, integration, artifact-specific QA, rendering verification, revision, freeze, and delivery state. Use for substantial or multi-stage artifact work where correctness, structure, visual integrity, or packaging must be verified."
-
-metadata:
-            sc---
-pe: "general"
-            owner: "xninetzy"
-            language: "en"
-            version: "3.0.0"
-            priority: "P1"
-
-lifecycle: "discover -> bind -> specify -> inspect -> source -> architect -> produce -> integrate -> validate -> render -> qa -> revise -> freeze -> checkpoint -> deliver"
-
-required_capabilities:
-- artifact_inspect
-- artifact_generate
-- artifact_validate
-- artifact_render
-- artifact_package
-
-optional_capabilities:
-- file_search
-- file_read
-- repo_search
-- repo_diff
-- source_search
-- evidence_validate
-- graph_search
-- memory_search
-- hitl_request_approval
-- lightning_record_action
-
-trigger_conditions:
-- producing a substantial document
-- producing a PDF
-- producing a presentation
-- producing a spreadsheet
-- producing a diagram or infographic
-- integrating multiple artifact components
-- reproducing an existing template
-- converting between artifact formats
-- performing artifact QA
-- assembling a multi-file deliverable
-- preparing a final artifact for handoff or submission
-
-non_goals:
-- LMS submission automation
-- deep research methodology
-- course-specific academic requirement interpretation
-- repository implementation unrelated to artifact output
-- generic project management
-- replacing specialized artifact-generation skills
-
-routing:
-            academic_assignment: "hebat-assignment"
-            academic_lms: "hebat-academic"
-            complex_assignment_orchestration: "xninetzy-assignment-orchestrator"
-            research: "xninetzy-deep-research"
-            document: "docx"
-            pdf: "pdf"
-            presentation: "slides"
-            spreadsheet: "spreadsheets"
--------------------------
+---
 
 # Xninetzy Artifact Orchestrator
 

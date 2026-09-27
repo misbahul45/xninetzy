@@ -60,10 +60,25 @@ _READ_ACTIONS = frozenset(
     }
 )
 _DRAFT_MARKERS = ("prepare", "plan", "draft", "preview", "dry_run", "analyze")
+_RISK_OVERRIDES: dict[str, RiskClass] = {
+    "career_find_similar_jobs": RiskClass.READ,
+    "career_find_alternative_titles": RiskClass.READ,
+    "career_find_hidden_jobs": RiskClass.READ,
+    "career_extract_requirements": RiskClass.READ,
+    "career_skill_gap": RiskClass.DRAFT,
+    "career_market_skill_trend": RiskClass.DRAFT,
+    "career_salary_analysis": RiskClass.DRAFT,
+    "career_company_research": RiskClass.DRAFT,
+    "career_interview_prep": RiskClass.DRAFT,
+    "career_resume_analysis": RiskClass.DRAFT,
+}
 
 
 def classify_risk(action: str) -> RiskClass:
     normalized = action.strip().lower()
+    override = _RISK_OVERRIDES.get(normalized)
+    if override is not None:
+        return override
     if normalized in _FINAL_ACTIONS or normalized.endswith("_final_submit"):
         return RiskClass.FINAL
     if any(marker in normalized for marker in _DRAFT_MARKERS):

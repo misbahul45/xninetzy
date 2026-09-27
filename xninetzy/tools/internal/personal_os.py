@@ -73,7 +73,7 @@ def personal_open_loop_create(
 def personal_open_loop_list() -> dict:
     """List currently open loops with age_days and importance."""
     return {
-        "loops": [l.to_dict() for l in get_personal_os().list_open_loops()],
+        "loops": [loop.to_dict() for loop in get_personal_os().list_open_loops()],
     }
 
 

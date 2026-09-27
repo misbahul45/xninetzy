@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from langchain_core.tools import tool
 
 from xninetzy.os.auth.browser.gateway import (
@@ -11,6 +13,7 @@ from xninetzy.os.auth.browser.gateway import (
     default_gateway,
 )
 from xninetzy.os.auth.oauth.providers import (
+    ProviderDefinition,
     build_authorization_url,
     list_providers,
     get_provider,
@@ -105,17 +108,63 @@ def auth_session_create(
     if get_provider_adapter(provider) is None:
         return to_tool_result({"error": f"unknown provider: {provider}"})
     owner = _uid(sender_id, chat_id)
-    chosen_method = method if method != "auto" else "oauth"
-    if chosen_method == "oauth" and get_provider(provider) is None:
+    adapter = get_provider_adapter(provider)
+    provider_def = get_provider(provider)
+    if method == "auto":
+        chosen_method = adapter.extra.get("primary_method") or (
+            provider_def.preferred_method if provider_def else "oauth"
+        )
+    else:
+        chosen_method = method
+    if chosen_method == "oauth" and provider_def is None:
         return to_tool_result({"error": f"oauth not configured for provider: {provider}"})
     pkce = generate_pkce() if chosen_method == "oauth" else None
     state = new_state_token()
     authorization_url: str | None = None
-    provider_def = get_provider(provider) if chosen_method == "oauth" else None
+    bound_redirect_uri: str | None = None
+    callback_bound: dict[str, Any] | None = None
     if chosen_method == "oauth" and provider_def is not None and pkce is not None:
         try:
+            from xninetzy.os.auth.oauth.callback_server import (
+                CallbackServerAlreadyRunning,
+                callback_server_status,
+                default_callback_handler,
+                start_callback_server,
+            )
+            if not callback_server_status().get("running"):
+                try:
+                    bound = start_callback_server(default_callback_handler)
+                    bound_redirect_uri = bound.redirect_uri
+                    callback_bound = bound.to_safe_dict()
+                except CallbackServerAlreadyRunning as exc:
+                    return to_tool_result({"error": f"callback server unavailable: {exc}"})
+            else:
+                bound_redirect_uri = callback_server_status()["bound"]["redirect_uri"]
+                callback_bound = callback_server_status()["bound"]
+            effective_provider = ProviderDefinition(
+                provider_id=provider_def.provider_id,
+                display_name=provider_def.display_name,
+                authorization_endpoint=provider_def.authorization_endpoint,
+                token_endpoint=provider_def.token_endpoint,
+                issuer=provider_def.issuer,
+                identity_endpoint=provider_def.identity_endpoint,
+                revoke_endpoint=provider_def.revoke_endpoint,
+                discovery_endpoint=provider_def.discovery_endpoint,
+                default_scopes=provider_def.default_scopes,
+                supports_pkce=provider_def.supports_pkce,
+                supports_refresh=provider_def.supports_refresh,
+                client_id_env=provider_def.client_id_env,
+                client_secret_env=provider_def.client_secret_env,
+                redirect_uri=bound_redirect_uri or provider_def.redirect_uri,
+                allowed_origins=provider_def.allowed_origins,
+                preferred_method=provider_def.preferred_method,
+                fallback_methods=provider_def.fallback_methods,
+                api_token_env=provider_def.api_token_env,
+                api_token_url=provider_def.api_token_url,
+                extra=provider_def.extra,
+            )
             authorization_url = build_authorization_url(
-                provider_def,
+                effective_provider,
                 state=state,
                 code_challenge=pkce.code_challenge,
                 scopes=tuple(scopes or ()),
@@ -123,6 +172,8 @@ def auth_session_create(
             assert_safe_url(authorization_url, provider_def.allowed_origins)
         except URLBlockedError as exc:
             return to_tool_result({"error": f"url policy blocked: {exc}"})
+        except Exception as exc:
+            return to_tool_result({"error": f"oauth setup failed: {exc}"})
     record = create_session(
         owner=owner,
         provider=provider,
@@ -132,9 +183,13 @@ def auth_session_create(
         state_token=state if chosen_method == "oauth" else None,
         pkce_verifier=pkce.code_verifier if pkce is not None else None,
         authorization_url=authorization_url,
+        redirect_uri=bound_redirect_uri,
         ttl_seconds=900,
     )
-    return to_tool_result(record.to_safe_dict())
+    payload = record.to_safe_dict()
+    if callback_bound is not None:
+        payload["callback_server"] = callback_bound
+    return to_tool_result(payload)
 
 
 @tool

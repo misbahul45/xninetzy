@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import os
 from pathlib import Path
 
 import pytest
@@ -58,7 +57,8 @@ def test_vault_health_detects_missing_frontmatter(vault: Path) -> None:
     _write(vault, "no_fm.md", "# No frontmatter")
     _write(vault, "with_fm.md", "---\ntitle: ok\n---\nok")
     report = run_vault_health()
-    rel = lambda p: str(Path("no_fm.md"))
+    def rel(p):
+        return str(Path("no_fm.md"))
     assert any(rel(p) == "no_fm.md" for p in report.notes_without_frontmatter)
 
 
@@ -73,7 +73,7 @@ def test_graph_analysis_counts_edges_and_density(vault: Path) -> None:
 def test_graph_analysis_detects_hub(vault: Path) -> None:
     _write(vault, "hub.md", "x")
     for i in range(3):
-        _write(vault, f"leaf{i}.md", f"links [[hub]]")
+        _write(vault, f"leaf{i}.md", "links [[hub]]")
     g = run_graph_analysis()
     hub_names = [name for name, _ in g.hubs]
     assert "hub" in hub_names

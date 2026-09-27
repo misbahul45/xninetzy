@@ -1,25 +1,7 @@
 ---
-
-...
-
-...
-
-...
 name: "consulting-pptx"
 description: "Maximum-strength boardroom-quality PowerPoint skill. Combines carnot-tech consulting slide rules canon (~80 rules, 62 HTML archetypes, mechanical rule checker) with anyideaz template-driven pptxgenjs pipeline (analyze, generate, edit). Use when the user wants the highest-quality consulting deck, with strict slide-design discipline AND template fidelity. Triggers include: consulting-quality slides, boardroom deck, MECE slides, McKinsey-style deck, structured consulting presentation, template-driven slide deck, highest-quality PPT."
-metadata:
-  scope: "general"
-  owner: "xninetzy"
-  upstream: "https://github.com/carnot-tech/consulting-pptx-skill + https://github.com/anyideaz/pptx-skills"
-  license: "MIT"
-  language: "en"
-  version: "1.0.0"
-  lifecycle: "choose-mode design-rules assemble mechanical-check visual-check deliver"
-  trust_level: "owner-installed"
-  composed_of: "consulting-pptx-skill,pptx-skills"
-  external_subprocess: "true"
-  external_subprocess_bins: "python3 node playwright google-chrome"
-...
+---
 
 # consulting-pptx (composite, max-strength)
 

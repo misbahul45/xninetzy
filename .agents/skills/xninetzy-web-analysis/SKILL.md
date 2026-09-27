@@ -1,17 +1,7 @@
-
-
+---
 name: "xninetzy-web-analysis"
-
-description: "Safety-first read-only web and portal analysis operating system for explicitly allowlisted academic portals, authenticated applications, institutional SSO systems, documentation sites, and dynamic public websites. Use for bounded structural discovery, navigation and module mapping, permitted public-page analysis, evidence and provenance tracking, safe knowledge ingestion, public visual capture, freshness-aware cache management, change detection, and cross-session analysis checkpoints. Never use for mutation, form submission, CAPTCHA solving, credential extraction, access-control bypass, or authenticated personal-page visual capture."
-
-metadata:
-      ---
-                         scope: "general"
-                                owner: "xninetzy"
-                                language: "en"
-                                version: "3.0.0"
-                                lifecycle: "scope -> authorize -> inspect -> classify -> session-check -> refresh -> discover -> filter -> persist -> verify -> checkpoint -> report"
------------------------------------------------------------------------------------------------------------------------------------------------------
+description: "Safety-first read-only web and portal analysis operating system for explicitly allowlisted academic portals, authenticated applications, institutional SSO systems, documentation sites, and dynamic public websites. Use for bounded structural discovery, navigation and module mapping, permitted public-page analysis, evidence and provenance tracking, safe knowledge ingestion, public visual capture, freshness-aware cache management, change detection, and cross-session analysis checkpoints. Never use for mutation, form submission, CAPTCHA solving, credential extraction, access-control bypass, or..."
+---
 
 # Xninetzy Web Analysis OS
 

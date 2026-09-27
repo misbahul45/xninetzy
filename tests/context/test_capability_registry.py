@@ -169,4 +169,4 @@ def test_match_capability_records_method(_isolated_db: Path):
     seed_from_registry()
     results = match_capability("repo_search")
     assert results
-    assert {result.method for result in results} <= {"jaccard", "contains"}
+    assert {result.method for result in results} <= {"jaccard", "contains", "exact"}

@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
-from xninetzy.os.research import router as _research_router
 from xninetzy.schemas.research_packet import (
     Claim,
     Evidence,

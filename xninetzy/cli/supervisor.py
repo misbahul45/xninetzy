@@ -135,12 +135,10 @@ def _cmd_release_check(_args: argparse.Namespace) -> int:
             True,
         )
     )
+    from xninetzy.tools.release_check import _CANONICAL_FINAL_TOOLS
+
     finals = tuple(tools.get("final_tools", ()))
-    expected_final = (
-        "hebat_upload_submission",
-        "portal_krs_war_arm",
-        "qa_fill_kuesioner",
-    )
+    expected_final = tuple(sorted(_CANONICAL_FINAL_TOOLS))
     checks.append(
         (
             "canonical_final_tools",

@@ -152,7 +152,7 @@ def test_list_workbooks_payload_redacts_secret(tmp_path: Path) -> None:
     if tsc_available():
         pytest.skip("requires missing tableauserverclient to exercise error path")
     try:
-        result = list_workbooks(_target())
+        list_workbooks(_target())
     except TableauIntegrationError as exc:
         assert _SECRET not in str(exc)
         assert exc.code == "TABLEAU_DEPENDENCY_MISSING"
@@ -200,7 +200,7 @@ def test_extract_csv_to_hyper_symlink_escape(tmp_path: Path) -> None:
         os.symlink(outside_target, sym_path)
     except (OSError, NotImplementedError):
         pytest.skip("symlinks unsupported on this platform")
-    outside_target.write_text("secret=1", encoding="utf-8")
+    outside_target.write_text("col\nsecret_1=1\n", encoding="utf-8")
     profile = profile_csv(sym_path)
     assert profile.row_count >= 1
 

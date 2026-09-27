@@ -89,8 +89,7 @@ def _resolve_activity_cmid(
 def _is_owner_chat(*chat_ids: str | None) -> bool:
     owners = configured_owner_jids()
     owner_digits = {
-        "".join(ch for ch in entry.split("@", 1)[0] if ch.isdigit())
-        for entry in owners
+        "".join(ch for ch in entry.split("@", 1)[0] if ch.isdigit()) for entry in owners
     }
     owner_digits.discard("")
     matches = False
@@ -159,7 +158,11 @@ def _parse_due_dt(due_str: str | None) -> datetime | None:
     # Handle dotted time: replace '.' between digits with ':'
     s_clean = re.sub(r"(\d)\.(\d)", r"\1:\2", s_clean)
     # Strip weekday prefix handling is via formats, but also try without it
-    s_clean_no_weekday = re.sub(r"^\w+,\s*", "", s_clean) if "," in s_clean and s_clean.split(",")[0].strip().isalpha() else s_clean
+    s_clean_no_weekday = (
+        re.sub(r"^\w+,\s*", "", s_clean)
+        if "," in s_clean and s_clean.split(",")[0].strip().isalpha()
+        else s_clean
+    )
     candidates = [s_clean, s_clean_no_weekday] if s_clean_no_weekday != s_clean else [s_clean]
     for candidate in candidates:
         for fmt in [
@@ -215,9 +218,7 @@ async def hebat_login_status_verbose(chat_id: str) -> str:
     session = get_session(chat_id)
     lines = ["*HEBAT Login Status*"]
     lines.append(f"• Session aktif: {'ya' if is_valid else 'tidak'}")
-    lines.append(
-        f"• Profile: {profile_name or (session or {}).get('profile_name') or '-'}"
-    )
+    lines.append(f"• Profile: {profile_name or (session or {}).get('profile_name') or '-'}")
     lines.append(
         f"• Storage state: {'ada' if (session or {}).get('storage_state_path') else 'tidak ada'}"
     )
@@ -238,23 +239,13 @@ async def hebat_debug_login(chat_id: str = "system") -> str:
         credentials.password.get_secret_value(),
     )
     lines = ["*HEBAT Debug Login*"]
-    lines.append(
-        f"• Env username: {'terbaca' if result['env_username_read'] else 'kosong'}"
-    )
-    lines.append(
-        f"• Env password: {'tersedia' if result['env_password_available'] else 'kosong'}"
-    )
+    lines.append(f"• Env username: {'terbaca' if result['env_username_read'] else 'kosong'}")
+    lines.append(f"• Env password: {'tersedia' if result['env_password_available'] else 'kosong'}")
     lines.append(f"• Login URL: {result['login_url']}")
     lines.append(f"• HTTP status: {result.get('http_status') or '-'}")
-    lines.append(
-        f"• Redirect chain: {'ada' if result.get('redirect_chain') else 'tidak'}"
-    )
-    lines.append(
-        f"• Token ditemukan: {'ya' if result.get('login_token_found') else 'tidak'}"
-    )
-    lines.append(
-        f"• Cookie session: {'ada' if result.get('session_cookie_saved') else 'tidak'}"
-    )
+    lines.append(f"• Redirect chain: {'ada' if result.get('redirect_chain') else 'tidak'}")
+    lines.append(f"• Token ditemukan: {'ya' if result.get('login_token_found') else 'tidak'}")
+    lines.append(f"• Cookie session: {'ada' if result.get('session_cookie_saved') else 'tidak'}")
     lines.append(
         f"• Login success indicator: {'ya' if result.get('login_success_indicator') else 'tidak'}"
     )
@@ -403,10 +394,7 @@ async def hebat_sync_course_activities(chat_id: str, course_id: str) -> str:
         )
         upsert_activity(act)
         counts[a["type"].value if hasattr(a["type"], "value") else str(a["type"])] = (
-            counts.get(
-                a["type"].value if hasattr(a["type"], "value") else str(a["type"]), 0
-            )
-            + 1
+            counts.get(a["type"].value if hasattr(a["type"], "value") else str(a["type"]), 0) + 1
         )
 
     summary = ", ".join(f"{v} {k}" for k, v in counts.items())
@@ -418,6 +406,75 @@ async def hebat_sync_course_activities(chat_id: str, course_id: str) -> str:
         )
     if len(activities) > 15:
         lines.append(f"... dan {len(activities) - 15} activity lainnya")
+    return "\n".join(lines)
+
+
+@tool(
+    description=(
+        "List HEBAT course activities from the local SQLite cache with optional "
+        "filters by course_id, activity_type, and case-insensitive title search. "
+        "Returns up to `limit` rows (default 50, clamped to [1, 200]). "
+        "Read-only; use hebat_sync_course_activities first to populate the cache."
+    )
+)
+def hebat_list_course_activities(
+    course_id: str | None = None,
+    activity_type: str | None = None,
+    search: str | None = None,
+    limit: int = 50,
+) -> str:
+    rows = list_activities(course_id, activity_type)
+    if search:
+        needle = search.lower()
+        rows = [r for r in rows if needle in (r.get("title") or "").lower()]
+    if not rows:
+        if not search and not course_id and not activity_type:
+            return (
+                "Belum ada activity sama sekali.\n"
+                "Jalankan `hebat_sync_courses` lalu "
+                "`hebat_sync_course_activities(course_id=...)` untuk populate cache."
+            )
+        filter_desc = f"course_id={course_id}, activity_type={activity_type}, search='{search}'"
+        return (
+            f"Tidak ditemukan activity untuk filter: {filter_desc}.\n"
+            "Coba perluas filter atau jalankan `hebat_sync_course_activities` "
+            "untuk refresh cache."
+        )
+    if limit < 1:
+        limit = 1
+    elif limit > 200:
+        limit = 200
+    rows.sort(
+        key=lambda r: (
+            r.get("course_id") or "",
+            r.get("section_title") or "",
+            r.get("title") or "",
+        )
+    )
+    total = len(rows)
+    rows = rows[:limit]
+    if course_id:
+        lines = [f"📋 Activities {course_id} ({total} ditemukan):\n"]
+        for r in rows:
+            section = r.get("section_title") or "—"
+            title = r.get("title") or "(no title)"
+            type_ = r.get("type") or "unknown"
+            lines.append(f"[{section}] {title} (`{type_}`)")
+    else:
+        lines = [f"📋 Activities ({total} ditemukan, grouped by course):\n"]
+        current_course: str | None = None
+        for r in rows:
+            cid = r.get("course_id") or "—"
+            if cid != current_course:
+                lines.append(f"\n=== {cid} ===")
+                current_course = cid
+            section = r.get("section_title") or "—"
+            title = r.get("title") or "(no title)"
+            type_ = r.get("type") or "unknown"
+            lines.append(f"[{section}] {title} (`{type_}`)")
+    if total > len(rows):
+        hidden = total - len(rows)
+        lines.append(f"\n({hidden} more — naikkan `limit` atau pakai `search` untuk mempersempit)")
     return "\n".join(lines)
 
 
@@ -491,9 +548,7 @@ async def hebat_download_material(
         return f"Gagal mengunduh materi dari `{download_url}`."
 
     local_path = Path(result["local_path"])
-    pdf_data = (
-        summarize_pdf(local_path) if local_path.suffix.casefold() == ".pdf" else {}
-    )
+    pdf_data = summarize_pdf(local_path) if local_path.suffix.casefold() == ".pdf" else {}
     pages = pdf_data.get("pages", 0)
     preview = pdf_data.get("text_preview", "")[:1500]
 
@@ -505,14 +560,14 @@ async def hebat_download_material(
             from xninetzy.os.notes.folder_policy import canonical_path
 
             note_content = (
-                f"---\nschema_version: 1\ntype: hebat_material\ntitle: \"{title}\"\ncanonical_path: {canonical_path('hebat_material', title=title, course=str(course_id))}\ncourse_id: {course_id}\nsource: HEBAT\n---\n\n"
+                f'---\nschema_version: 1\ntype: hebat_material\ntitle: "{title}"\ncanonical_path: {canonical_path("hebat_material", title=title, course=str(course_id))}\ncourse_id: {course_id}\nsource: HEBAT\n---\n\n'
                 f"# {title}\n\n"
                 f"*Sumber:* HEBAT Course ID `{course_id}`\n"
                 f"*File:* `{result['filename']}`\n"
                 f"*Halaman:* {pages}\n\n"
                 f"---\n\n## Isi / Ringkasan\n\n{preview}"
             )
-            obs_path = canonical_path('hebat_material', title=title, course=str(course_id))
+            obs_path = canonical_path("hebat_material", title=title, course=str(course_id))
             ObsidianVaultService().create_note(obs_path, note_content, overwrite=True)
             obsidian_path = obs_path
         except Exception as e:
@@ -522,8 +577,7 @@ async def hebat_download_material(
         f"📄 *{title}*",
         f"File: `{result['filename']}`",
         f"Lokasi: `{result['local_path']}`",
-        f"Ukuran: {result['size_bytes'] // 1024} KB"
-        + (f" | {pages} halaman" if pages else ""),
+        f"Ukuran: {result['size_bytes'] // 1024} KB" + (f" | {pages} halaman" if pages else ""),
     ]
     if obsidian_path:
         lines.append(f"Disimpan ke Obsidian: `{obsidian_path}`")
@@ -537,9 +591,7 @@ async def hebat_download_material(
 
 
 @tool
-def hebat_read_pdf(
-    file_path: str, mode: str = "summary", question: str | None = None
-) -> str:
+def hebat_read_pdf(file_path: str, mode: str = "summary", question: str | None = None) -> str:
     """Baca dan ringkas PDF yang sudah diunduh dari HEBAT.
 
     Args:
@@ -556,9 +608,7 @@ def hebat_read_pdf(
     headings = data.get("headings", [])
 
     if mode == "outline" and headings:
-        return f"*Outline PDF ({pages} hal):*\n" + "\n".join(
-            f"• {h}" for h in headings[:20]
-        )
+        return f"*Outline PDF ({pages} hal):*\n" + "\n".join(f"• {h}" for h in headings[:20])
 
     if mode == "qa" and question:
         # Find relevant section
@@ -566,10 +616,7 @@ def hebat_read_pdf(
         q_lower = question.lower()
         idx = text.find(q_lower[:20])
         excerpt = preview[max(0, idx - 200) : idx + 500] if idx >= 0 else preview[:800]
-        return (
-            f"*Pertanyaan:* {question}\n\n"
-            f"*Konten relevan dari PDF ({pages} hal):*\n{excerpt}"
-        )
+        return f"*Pertanyaan:* {question}\n\n*Konten relevan dari PDF ({pages} hal):*\n{excerpt}"
 
     return f"📄 *Ringkasan PDF* ({pages} halaman)\n\n{preview[:1800]}" + (
         "\n\n_[konten dipotong]_" if len(preview) > 1800 else ""
@@ -594,9 +641,7 @@ async def hebat_sync_assignments(chat_id: str, course_id: str | None = None) -> 
     s = get_settings()
     assign_activities = list_activities(course_id=course_id, activity_type="assign")
     if not assign_activities:
-        return (
-            "Tidak ada assignment ditemukan di database. Sync course activities dulu."
-        )
+        return "Tidak ada assignment ditemukan di database. Sync course activities dulu."
 
     synced = 0
     reminders_created = 0
@@ -611,9 +656,7 @@ async def hebat_sync_assignments(chat_id: str, course_id: str | None = None) -> 
         async with sem:
             cmid = act["cmid"]
             try:
-                detail = await asyncio.wait_for(
-                    fetch_assignment_detail(chat_id, cmid), timeout=25
-                )
+                detail = await asyncio.wait_for(fetch_assignment_detail(chat_id, cmid), timeout=25)
             except asyncio.TimeoutError:
                 logger.warning("hebat_sync_timeout cmid=%s", cmid)
                 return
@@ -653,9 +696,7 @@ async def hebat_sync_assignments(chat_id: str, course_id: str | None = None) -> 
             ):
                 for hours in s.hebat_reminder_hours():
                     remind_at = due_dt - timedelta(hours=hours)
-                    if remind_at > now and not has_reminder_for_assignment(
-                        assignment_id, hours
-                    ):
+                    if remind_at > now and not has_reminder_for_assignment(assignment_id, hours):
                         try:
                             from xninetzy.os.reminders.reminder_store import (
                                 ReminderStore,
@@ -696,7 +737,9 @@ async def hebat_sync_assignments(chat_id: str, course_id: str | None = None) -> 
                         except Exception as e:
                             logger.warning("Failed to create reminder: %s", e)
             # Respect rate limit but distribute across concurrency: sleep a fraction
-            await asyncio.sleep(s.HEBAT_RATE_LIMIT_SECONDS / 5 if s.HEBAT_RATE_LIMIT_SECONDS else 0.2)
+            await asyncio.sleep(
+                s.HEBAT_RATE_LIMIT_SECONDS / 5 if s.HEBAT_RATE_LIMIT_SECONDS else 0.2
+            )
 
     await asyncio.gather(*(_process_one(act) for act in assign_activities))
 
@@ -735,9 +778,7 @@ async def hebat_get_assignment_detail(chat_id: str, assignment_id_or_url: str) -
 
     attachments = detail.get("attachments", [])
     att_lines = (
-        "\n".join(f"  • {a['filename']}" for a in attachments)
-        if attachments
-        else "  (tidak ada)"
+        "\n".join(f"  • {a['filename']}" for a in attachments) if attachments else "  (tidak ada)"
     )
 
     return (
@@ -777,9 +818,7 @@ async def hebat_prepare_submission_from__file(
     # Validate file
     warnings: list[str] = []
     if not path.exists():
-        return tool_error(
-            ToolErrorCode.NOT_FOUND, f"File tidak ditemukan: `{local_file_path}`"
-        )
+        return tool_error(ToolErrorCode.NOT_FOUND, f"File tidak ditemukan: `{local_file_path}`")
 
     mime = path.suffix.lower()
     if mime not in [".pdf"]:
@@ -921,9 +960,7 @@ async def hebat_upload_submission(
         )
 
     if sub["source_chat_id"] != chat_id:
-        return tool_error(
-            ToolErrorCode.POLICY_HELD, "Token ini bukan milik chat kamu."
-        )
+        return tool_error(ToolErrorCode.POLICY_HELD, "Token ini bukan milik chat kamu.")
 
     payload = {
         "submission_id": sub["id"],
@@ -933,9 +970,7 @@ async def hebat_upload_submission(
     }
     policy = evaluate_action("hebat_submit_submission", payload)
     if not policy.allowed:
-        return tool_error(
-            ToolErrorCode.POLICY_HELD, f"Upload ditahan policy: {policy.reason}"
-        )
+        return tool_error(ToolErrorCode.POLICY_HELD, f"Upload ditahan policy: {policy.reason}")
     if policy.requires_approval and not _is_owner_chat(chat_id, sub["source_chat_id"]):
         if approval_id is None:
             requested_id = request_approval(
@@ -952,18 +987,18 @@ async def hebat_upload_submission(
                 "Upload tugas HEBAT",
                 f"{sub['uploaded_filename']} untuk activity {sub['assignment_id']}.",
             )
-            delivery = "Tombol approval dikirim ke  admin." if delivered else "Tombol approval gagal dikirim."
+            delivery = (
+                "Tombol approval dikirim ke  admin."
+                if delivered
+                else "Tombol approval gagal dikirim."
+            )
             return f"Upload HEBAT membutuhkan approval #{requested_id}. {delivery}"
         try:
             validate_approval(approval_id, "hebat_submit_submission", policy.action_hash)
         except ValueError as exc:
-            return tool_error(
-                ToolErrorCode.POLICY_HELD, f"Upload HEBAT ditahan approval: {exc}"
-            )
+            return tool_error(ToolErrorCode.POLICY_HELD, f"Upload HEBAT ditahan approval: {exc}")
     all_assigns = list_assignments()
-    assign = next(
-        (a for a in all_assigns if a.get("activity_id") == sub["assignment_id"]), None
-    )
+    assign = next((a for a in all_assigns if a.get("activity_id") == sub["assignment_id"]), None)
     if not assign:
         return tool_error(
             ToolErrorCode.NOT_FOUND,
@@ -1029,8 +1064,7 @@ async def _upload_direct_admin(
     if not resolved:
         return tool_error(
             ToolErrorCode.NOT_FOUND,
-            f"Tugas dengan cmid/URL `{assignment_cmid}` tidak ditemukan. "
-            "Sync course HEBAT dulu.",
+            f"Tugas dengan cmid/URL `{assignment_cmid}` tidak ditemukan. Sync course HEBAT dulu.",
         )
     cmid, url = resolved
 
@@ -1048,6 +1082,7 @@ async def _upload_direct_admin(
         if cur_resolved:
             try:
                 from xninetzy.os.academic.hebat.storage import list_assignments
+
                 for a in list_assignments():
                     if str(a.get("cmid", "")) == str(cmid):
                         assignment_id = a.get("activity_id", 0)
@@ -1082,9 +1117,7 @@ async def _upload_direct_admin(
     }
     policy = evaluate_action("hebat_submit_submission", payload)
     if not policy.allowed:
-        return tool_error(
-            ToolErrorCode.POLICY_HELD, f"Upload ditahan policy: {policy.reason}"
-        )
+        return tool_error(ToolErrorCode.POLICY_HELD, f"Upload ditahan policy: {policy.reason}")
 
     if not _is_owner_chat(chat_id) and not _is_admin_context(chat_id):
         return tool_error(
@@ -1112,9 +1145,7 @@ async def _upload_direct_admin(
         try:
             validate_approval(approval_id, "hebat_submit_submission_direct", policy.action_hash)
         except ValueError as exc:
-            return tool_error(
-                ToolErrorCode.POLICY_HELD, f"Upload HEBAT ditahan approval: {exc}"
-            )
+            return tool_error(ToolErrorCode.POLICY_HELD, f"Upload HEBAT ditahan approval: {exc}")
 
     update_submission_status(token, UploadStatus.UPLOADING)
 
@@ -1144,6 +1175,7 @@ async def _upload_direct_admin(
 
 def _find_submission_by_idempotency(idempotency_key: str) -> dict | None:
     from xninetzy.os.academic.hebat.storage import init_db, connect as _connect
+
     init_db()
     with _connect() as conn:
         row = conn.execute(
@@ -1155,6 +1187,7 @@ def _find_submission_by_idempotency(idempotency_key: str) -> dict | None:
 
 def _store_idempotency_key(key: str, token: str) -> None:
     from xninetzy.os.academic.hebat.storage import init_db, connect as _connect
+
     init_db()
     with _connect() as conn:
         conn.execute(
@@ -1167,6 +1200,7 @@ def _store_idempotency_key(key: str, token: str) -> None:
 
 def cmid_to_activity_id(cmid: str) -> int | None:
     from xninetzy.os.academic.hebat.storage import init_db, connect as _connect
+
     init_db()
     with _connect() as conn:
         row = conn.execute(
@@ -1189,24 +1223,20 @@ def hebat_cancel_submission(chat_id: str, confirmation_token: str) -> str:
     """
     sub = get_submission_by_token(confirmation_token)
     if not sub:
-        return tool_error(
-            ToolErrorCode.NOT_FOUND, f"Token `{confirmation_token}` tidak ditemukan."
-        )
+        return tool_error(ToolErrorCode.NOT_FOUND, f"Token `{confirmation_token}` tidak ditemukan.")
     if sub["source_chat_id"] != chat_id:
-        return tool_error(
-            ToolErrorCode.POLICY_HELD, "Token ini bukan milik chat kamu."
-        )
+        return tool_error(ToolErrorCode.POLICY_HELD, "Token ini bukan milik chat kamu.")
     update_submission_status(confirmation_token, UploadStatus.CANCELLED)
-    return (
-        f"✅ Upload dibatalkan. Token `{confirmation_token}` tidak bisa dipakai lagi."
-    )
+    return f"✅ Upload dibatalkan. Token `{confirmation_token}` tidak bisa dipakai lagi."
 
 
 # ─── 12b. Remove Submission ───────────────────────────────────────────────────
 
 
 @tool
-async def hebat_remove_submission(chat_id: str, assignment_id_or_url: str, confirm: bool = False) -> str:
+async def hebat_remove_submission(
+    chat_id: str, assignment_id_or_url: str, confirm: bool = False
+) -> str:
     """Hapus submission tugas HEBAT yang sudah dikirim (destruktif).
 
     Tanpa confirm=True hanya menampilkan status saat ini (dry-run) tanpa
@@ -1248,9 +1278,7 @@ async def hebat_remove_submission(chat_id: str, assignment_id_or_url: str, confi
         )
 
     all_assigns = list_assignments()
-    assign = next(
-        (a for a in all_assigns if str(a.get("cmid", "")) == str(cmid)), None
-    )
+    assign = next((a for a in all_assigns if str(a.get("cmid", "")) == str(cmid)), None)
 
     token = generate_token()
     create_submission(

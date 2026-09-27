@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import re
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -39,11 +40,9 @@ class TemplateInfo:
         }
 
 
-import re
-
-DATE_VAR_RE = re.compile(r"\{\{\s*(date|time)\b[^}]*\}\}", re.IGNORECASE)
 PLACEHOLDER_RE = re.compile(r"\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)")
 FRONTMATTER_RE = re.compile(r"^---\s*\n.*?\n---\s*\n", re.DOTALL)
+DATE_VAR_RE = re.compile(r"\{\{\s*(date|time)\b[^}]*\}\}", re.IGNORECASE)
 
 
 def _iter_templates(root: Path) -> list[Path]:

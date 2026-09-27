@@ -18,7 +18,7 @@ def _iter_doc_files() -> list[Path]:
 
 
 def _audit_snapshot() -> dict[str, int]:
-    cmd = [
+    [
         sys.executable,
         "-m",
         "uv",
@@ -57,7 +57,7 @@ def _tool_section(snapshot: dict) -> dict:
 
 def test_no_stale_tool_total() -> None:
     snapshot = _audit_snapshot()
-    total = _tool_section(snapshot)["total"]
+    _tool_section(snapshot)["total"]
     pattern = re.compile(r"\b(\d{2,4})\s+tools\b")
     stale_targets = {343, 259, 305, 7, 23, 12, 70, 68}
     seen: list[tuple[Path, int, str]] = []
@@ -73,7 +73,7 @@ def test_no_stale_tool_total() -> None:
             seen.append((path, line, match.group(0)))
     assert not seen, (
         "stale tool counts still present: "
-        + ", ".join(f"{p}:{l}: {m}" for p, l, m in seen[:10])
+        + ", ".join(f"{p}:{line}: {m}" for p, line, m in seen[:10])
     )
 
 

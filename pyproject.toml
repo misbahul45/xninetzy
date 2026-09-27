@@ -9,6 +9,7 @@ description = "Xninetzy Intelligence MCP server — local-first MCP gateway expo
 readme = "README.md"
 requires-python = ">=3.11"
 license-files = ["LICENSE"]
+license = "LicenseRef-Xninetzy-Source-Available-2.2.0"
 keywords = [
     "mcp",
     "model-context-protocol",
@@ -32,7 +33,6 @@ classifiers = [
     "Environment :: Console",
     "Intended Audience :: Developers",
     "Intended Audience :: End Users/Desktop",
-    "License :: Other/Proprietary License",
     "Operating System :: POSIX :: Linux",
     "Operating System :: MacOS",
     "Operating System :: Microsoft :: Windows",
@@ -93,6 +93,10 @@ browser = [
     "pillow>=10.0",
     "pytesseract>=0.3.13",
 ]
+tableau = [
+    "tableauserverclient>=0.25",
+    "tableauhyperapi>=0.0.15927",
+]
 torch-cpu = [
     "torch>=2.2",
 ]
@@ -108,6 +112,9 @@ dev = [
     "pytest-asyncio>=0.23",
     "ruff>=0.9",
     "mypy>=1.8",
+    "hatchling>=1.26",
+    "twine>=5.0",
+    "build>=1.0",
 ]
 test = [
     "pytest>=8.0",

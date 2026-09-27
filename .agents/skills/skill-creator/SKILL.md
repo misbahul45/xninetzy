@@ -1,37 +1,8 @@
 ---
 name: "skill-creator"
 description: "Companion to `skill-security-review`. Use whenever you author or modify a SKILL.md, add a new MCP capability, or want to evaluate whether a candidate skill should ship. Drives the loop: create skill → create evals → run with/without → compare → benchmark → improve → publish. Bridges the Lightning RL episode store so every skill mutation is tied to a measured episode outcome rather than anecdote."
-metadata:
-  author: "xninetzy"
-  version: "1.0.0"
-  scope: "process"
-  priority: "P0"
-  required_tools:
-    - read_file
-    - write_file
-    - glob_files
-    - grep_search
-    - skill_validate
-    - skill_install
-    - lightning_episode_start
-    - lightning_record_action
-    - lightning_record_outcome
-    - lightning_episode_finish
-    - action_policy_evaluate
-  optional_tools:
-    - hitl_request_approval
-    - os_inbox
-    - memory_forget
-    - memory_add
-  trigger_conditions:
-    - the operator asks to create or modify a skill
-    - a new MCP tool is added and its expected use cases warrant a skill
-    - evidence suggests an existing skill should be retitled, reframed, or merged
-  prerequisites:
-    - target skill directory identified
-    - `skill-security-review` verdict available for first-party skills (if publishing outside this repo)
+metadata: ""
 ---
-
 # skill-creator
 
 Authoring a Skill without measuring it is a form of speculation. This

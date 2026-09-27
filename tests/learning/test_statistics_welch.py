@@ -68,7 +68,7 @@ def test_delta_with_confidence_no_significant_difference():
 
 
 def test_finalize_test_rejects_insufficient_samples():
-    test = create_ab_test(
+    create_ab_test(
         test_id="wt1",
         baseline="a",
         candidate="b",

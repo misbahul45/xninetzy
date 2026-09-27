@@ -37,6 +37,7 @@ HTTP secondary, loopback-bound by default) is the only external interface.
 | External MCP gateway | Untrusted-by-default registry, allowlist, risk classification | 5 MCP tools (`external_mcp_*`) |
 | Tasks extension | Long-running task handles (SEP-2663) | 4 MCP tools (`tasks_*`) |
 | Self-improvement | Memory lifecycle, episodic recall, proposals | 7 MCP tools (`improvement_*`) + 7 (`memory_*`) |
+| Tableau | Workbook IR, profiling, Hyper extract, TSC publish/refresh | 21 MCP tools (`tableau_*`); TSC + Hyper as optional deps |
 
 ## Design principles
 

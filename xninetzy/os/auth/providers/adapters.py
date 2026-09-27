@@ -40,6 +40,18 @@ _KAGGLE = ProviderAdapter(
     logout_url="https://www.kaggle.com/account/logout",
     supports_oauth=True,
     supports_browser_session=True,
+    extra={
+        "hybrid": True,
+        "primary_method": "api_token",
+        "fallback_methods": ("api_token", "browser_session", "oauth"),
+        "credential_env": ("KAGGLE_USERNAME", "KAGGLE_KEY"),
+        "rationale": (
+            "Kaggle does not expose a documented third-party OAuth 2.0 flow; "
+            "auth prefers API token (username+key). Browser session is a working "
+            "fallback. The legacy OAuth endpoints remain registered so existing "
+            "credentials keep working until deprecated by Kaggle."
+        ),
+    },
 )
 
 _GOOGLE = ProviderAdapter(
@@ -51,6 +63,12 @@ _GOOGLE = ProviderAdapter(
     logout_url="https://accounts.google.com/Logout",
     supports_oauth=True,
     supports_browser_session=True,
+    extra={
+        "hybrid": True,
+        "primary_method": "oauth",
+        "fallback_methods": ("oauth", "browser_session", "service_account"),
+        "credential_env": ("GOOGLE_APPLICATION_CREDENTIALS",),
+    },
 )
 
 _GITHUB = ProviderAdapter(
@@ -62,6 +80,12 @@ _GITHUB = ProviderAdapter(
     logout_url="https://github.com/logout",
     supports_oauth=True,
     supports_browser_session=True,
+    extra={
+        "hybrid": True,
+        "primary_method": "oauth",
+        "fallback_methods": ("oauth", "api_token", "browser_session"),
+        "credential_env": ("GITHUB_TOKEN", "GH_TOKEN"),
+    },
 )
 
 _ADAPTERS: dict[str, ProviderAdapter] = {

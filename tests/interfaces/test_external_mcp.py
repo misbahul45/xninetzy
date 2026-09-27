@@ -4,7 +4,6 @@ import json
 from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 
-import pytest
 
 from xninetzy.interfaces import external_mcp
 

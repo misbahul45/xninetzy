@@ -35,9 +35,10 @@ def test_router_paper_intent() -> None:
     assert "crossref" in ids
 
 
-def test_router_code_intent_empty_phase1() -> None:
+def test_router_code_intent_routes_github_adapter() -> None:
     request = RouteRequest(category=SourceCategory.CODE)
-    assert route_sources(request) == []
+    ids = [a.id for a in route_sources(request)]
+    assert ids == ["github"]
 
 
 def test_validate_plan_accepts_valid() -> None:

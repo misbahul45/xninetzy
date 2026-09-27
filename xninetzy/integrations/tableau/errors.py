@@ -57,7 +57,7 @@ def tableau_error_response(exc: BaseException) -> dict[str, str]:
     return {"error": "PROVIDER_ERROR", "message": str(exc)}
 
 
-__all__ = ["TableauIntegrationError", "tableau_error_response", "TABLEAU_ERROR_CODES"]
+__all__ = ["TableauIntegrationError", "tableau_error_response"]
 
 
 _TABLEAU_ERROR_CODES_LOCAL = _TABLEAU_ERROR_CODES

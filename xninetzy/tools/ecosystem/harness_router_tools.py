@@ -350,6 +350,7 @@ def recovery_choose(
         "last_error": last_error,
         "strategy": picked["action"],
         "steps": steps,
+        "candidate_tools": sorted({step["tool"] for step in steps}),
         "executable": True,
         "step_count": len(steps),
     }

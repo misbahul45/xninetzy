@@ -87,7 +87,6 @@ def research_storm_questions(
         perspective_name: Perspective name (defaults to first discovered).
         max_questions: Question cap.
     """
-    from xninetzy.schemas.research_packet import ResearchPerspective
     cfg = EngineConfig(max_questions_per_perspective=max_questions)
     perspectives = discover_perspectives(topic, config=cfg)
     target = next((p for p in perspectives if p.name == perspective_name), perspectives[0])

@@ -19,6 +19,7 @@ from xninetzy.os.research.sources.rate_limit import (
     RateLimiter,
     retry_async,
 )
+from xninetzy.os.research.sources.query_match import matches_query
 from xninetzy.os.research.sources.registry import (
     build_breaker,
     build_rate_limiter,
@@ -96,7 +97,6 @@ class RemoteOkAdapter(SourceAdapter):
         await self._breaker.record_success()
         if not isinstance(payload, list):
             return []
-        q = (query or "").strip().lower()
         records: list[SourceRecord] = []
         for entry in payload:
             if not isinstance(entry, dict):
@@ -107,7 +107,7 @@ class RemoteOkAdapter(SourceAdapter):
             company = (entry.get("company") or "").lower()
             tags = " ".join(entry.get("tags") or []).lower()
             haystack = f"{title} {company} {tags}"
-            if q and q not in haystack:
+            if not matches_query(query, haystack):
                 continue
             try:
                 records.append(_record_from_job(entry))

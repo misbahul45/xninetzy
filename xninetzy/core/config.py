@@ -179,6 +179,23 @@ class Settings(BaseSettings):
     AUDIO_TRANSCRIPTION_ENABLED: bool = True
     AUDIO_TRANSCRIPTION_MODEL: str = "whisper-1"
 
+    # Video generation (local ffmpeg only — no paid providers). All paths
+    # are env-configurable and honor ARTIFACT_ALLOWLIST.
+    VIDEO_GENERATION_ENABLED: bool = False
+    VIDEO_FFMPEG_BIN: str = "ffmpeg"
+    VIDEO_FFPROBE_BIN: str = "ffprobe"
+    VIDEO_OUTPUT_DIR: str = "~/Documents/xninetzy/generated/video"
+    VIDEO_MAX_INPUT_SIZE_MB: int = 256
+    VIDEO_MAX_OUTPUT_SIZE_MB: int = 2048
+    VIDEO_MAX_DURATION_SECONDS: int = 120
+    VIDEO_MAX_CONCURRENCY: int = 1
+    VIDEO_POLL_INTERVAL_SECONDS: float = 2.0
+    VIDEO_MAX_RUNTIME_SECONDS: int = 600
+    VIDEO_JOB_TTL_SECONDS: int = 86_400
+    VIDEO_BIN_TIMEOUT_SECONDS: float = 120.0
+    VIDEO_ALLOWED_INPUT_CODECS: str = "h264,h265,vp9,mpeg4,mpeg2,mpeg1,av1,png,jpeg,webp,pnm"
+    VIDEO_ALLOWED_OUTPUT_CODECS: str = "h264,h265,vp9,copy"
+
     # Durable single-owner OS schedules. Delivery jobs are at-most-once; an
     # ambiguous WA send is surfaced for manual inspection instead of blind retry.
     OS_SCHEDULER_ENABLED: bool = True
@@ -538,6 +555,7 @@ _PATH_KEYS = frozenset({
     "WEB_ANALYSIS_DATA_DIR",
     "VECTOR_DATA_DIR",
     "GRAPH_VECTOR_DATA_DIR",
+    "VIDEO_OUTPUT_DIR",
 })
 
 

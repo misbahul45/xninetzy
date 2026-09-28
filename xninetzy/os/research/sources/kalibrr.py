@@ -26,7 +26,7 @@ class KalibrrAdapter(BrowserScrapingAdapter):
     retry = RetryPolicy(max_attempts=2, backoff_base_seconds=2.0, backoff_max_seconds=8.0)
     circuit_breaker = CircuitBreaker(failure_threshold=3, open_duration_seconds=600.0)
 
-    SEARCH_URL = "https://www.kalibrr.com/c/jobs/search?keyword=__QUERY__&location=Indonesia"
+    SEARCH_URL = "https://jobseeker.kalibrr.com/job-board/1/?keyword=__QUERY__"
 
     def build_search_url(self, query: str, **kwargs) -> str:
         return self.SEARCH_URL.replace("__QUERY__", _quote(query))

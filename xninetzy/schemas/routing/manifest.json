@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "routing_manifest",
+  "type": "object",
+  "required": ["version", "registry_version", "generated_at", "tool_count", "tools"],
+  "properties": {
+    "$schema": {"const": "https://json-schema.org/draft/2020-12/schema"},
+    "version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+    "registry_version": {"type": "string"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "tool_count": {"type": "integer", "minimum": 0},
+    "tools": {
+      "type": "object",
+      "additionalProperties": {"$ref": "#/$defs/tool_entry"}
+    }
+  },
+  "$defs": {
+    "tool_entry": {
+      "type": "object",
+      "required": [
+        "name",
+        "feature_pack",
+        "risk",
+        "stability",
+        "version",
+        "requires_approval",
+        "requires_idempotency",
+        "requires_evidence",
+        "auto_discovered",
+        "tags"
+      ],
+      "properties": {
+        "name": {"type": "string"},
+        "feature_pack": {"enum": ["core", "academic-unair", "research", "coding"]},
+        "risk": {"enum": ["read", "draft", "write", "final"]},
+        "stability": {"enum": ["stable", "experimental"]},
+        "version": {"type": "string"},
+        "requires_approval": {"type": "boolean"},
+        "requires_idempotency": {"type": "boolean"},
+        "requires_evidence": {"type": "boolean"},
+        "auto_discovered": {"type": "boolean"},
+        "deprecated": {"type": "boolean"},
+        "replacement": {"type": ["string", "null"]},
+        "max_output_bytes": {"type": "integer", "minimum": 64},
+        "tags": {"type": "array", "items": {"type": "string"}},
+        "annotations": {"type": "object"},
+        "description": {"type": "string"},
+        "group": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "routing_providers",
+  "type": "object",
+  "required": ["version", "registry_version", "generated_at", "providers"],
+  "properties": {
+    "$schema": {"const": "https://json-schema.org/draft/2020-12/schema"},
+    "version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+    "registry_version": {"type": "string"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "providers": {
+      "type": "object",
+      "required": ["external_mcp", "llm", "research_source", "render", "dashboard"],
+      "properties": {
+        "external_mcp": {"type": "array", "items": {"$ref": "#/$defs/provider_entry"}},
+        "llm": {"type": "array", "items": {"$ref": "#/$defs/llm_entry"}},
+        "research_source": {"type": "array", "items": {"$ref": "#/$defs/source_entry"}},
+        "render": {"type": "array", "items": {"$ref": "#/$defs/render_entry"}},
+        "dashboard": {"type": "array", "items": {"$ref": "#/$defs/dashboard_entry"}},
+        "_registered_research_sids": {"type": "array", "items": {"type": "string"}},
+        "_research_categories": {"type": "array", "items": {"type": "string"}}
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "provider_entry": {
+      "type": "object",
+      "required": ["name", "kind", "transport", "trust_tier", "risk_class"],
+      "properties": {
+        "name": {"type": "string"},
+        "kind": {"type": "string"},
+        "transport": {"type": "string"},
+        "trust_tier": {"type": "integer"},
+        "risk_class": {"type": "string"},
+        "capabilities": {"type": "array", "items": {"type": "string"}},
+        "health_state": {"type": "string"},
+        "last_seen_at": {"type": ["string", "null"]},
+        "metadata": {"type": "object"}
+      },
+      "additionalProperties": false
+    },
+    "llm_entry": {
+      "type": "object",
+      "required": ["name", "kind", "default_model", "enabled", "available"],
+      "properties": {
+        "name": {"type": "string"},
+        "kind": {"type": "string"},
+        "default_model": {"type": "string"},
+        "models": {"type": "array", "items": {"type": "string"}},
+        "base_url": {"type": "string"},
+        "enabled": {"type": "boolean"},
+        "available": {"type": "boolean"},
+        "missing": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "source_entry": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {"type": "string"},
+        "category": {"type": "string"},
+        "base_url": {"type": "string"},
+        "requires_api_key": {"type": "boolean"},
+        "rate_limit_rpm": {"type": ["integer", "null"]},
+        "rate_limit_burst": {"type": ["integer", "null"]},
+        "auto_discovered": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "render_entry": {
+      "type": "object",
+      "required": ["name", "backend"],
+      "properties": {
+        "name": {"type": "string"},
+        "backend": {"type": "string"},
+        "cpu_allowed": {"type": "boolean"},
+        "auto_discovered": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "dashboard_entry": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {"type": "string"},
+        "kind": {"type": "string"},
+        "auto_discovered": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    }
+  }
+}

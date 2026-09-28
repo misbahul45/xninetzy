@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "routing_research_sources",
+  "type": "object",
+  "required": ["version", "registry_version", "generated_at", "count", "sources"],
+  "properties": {
+    "$schema": {"const": "https://json-schema.org/draft/2020-12/schema"},
+    "version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+    "registry_version": {"type": "string"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "count": {"type": "integer", "minimum": 0},
+    "sources": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/source_entry"}
+    }
+  },
+  "$defs": {
+    "source_entry": {
+      "type": "object",
+      "required": ["adapter", "module_path", "version"],
+      "properties": {
+        "adapter": {"type": "string"},
+        "module_path": {"type": "string"},
+        "version": {"type": "string"},
+        "category": {"type": "string"},
+        "base_url": {"type": "string"},
+        "requires_api_key": {"type": "boolean"},
+        "rate_limits": {"type": "object"},
+        "capabilities": {"type": "array", "items": {"type": "string"}},
+        "registered": {"type": "boolean"},
+        "auto_discovered": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    }
+  }
+}

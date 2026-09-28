@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "routing_drift",
+  "type": "object",
+  "required": ["generated_at", "registry_version", "drift"],
+  "properties": {
+    "$schema": {"const": "https://json-schema.org/draft/2020-12/schema"},
+    "version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "registry_version": {"type": "string"},
+    "drift": {
+      "type": "object",
+      "required": [
+        "tool_count",
+        "empty_groups_count",
+        "skill_count",
+        "providers",
+        "research_source_count"
+      ],
+      "properties": {
+        "tool_count": {
+          "type": "object",
+          "required": ["actual", "claimed_in_README", "delta"],
+          "properties": {
+            "actual": {"type": "integer", "minimum": 0},
+            "claimed_in_README": {"type": "integer", "minimum": 0},
+            "delta": {"type": "integer"}
+          },
+          "additionalProperties": false
+        },
+        "empty_groups_count": {"type": "integer", "minimum": 0},
+        "empty_groups": {"type": "array", "items": {"type": "string"}},
+        "skill_count": {
+          "type": "object",
+          "required": ["actual", "claimed_in_README", "delta"],
+          "properties": {
+            "actual": {"type": "integer", "minimum": 0},
+            "claimed_in_README": {"type": "integer", "minimum": 0},
+            "delta": {"type": "integer"}
+          },
+          "additionalProperties": false
+        },
+        "providers": {
+          "type": "object",
+          "properties": {
+            "external_mcp": {"type": "integer", "minimum": 0},
+            "llm": {"type": "integer", "minimum": 0},
+            "research_source": {"type": "integer", "minimum": 0},
+            "render": {"type": "integer", "minimum": 0},
+            "dashboard": {"type": "integer", "minimum": 0}
+          },
+          "additionalProperties": false
+        },
+        "research_source_count": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "version_history": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/history_entry"}
+    }
+  },
+  "$defs": {
+    "history_entry": {
+      "type": "object",
+      "required": ["generated_at", "manifest_sha256"],
+      "properties": {
+        "generated_at": {"type": "string", "format": "date-time"},
+        "manifest_sha256": {"type": "string"},
+        "tool_count": {"type": "integer", "minimum": 0},
+        "skill_count": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    }
+  }
+}

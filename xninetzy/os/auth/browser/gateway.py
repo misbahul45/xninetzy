@@ -6,6 +6,9 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any, Protocol
 
+import logging
+
+import logging as _logging
 from xninetzy.core.config import get_settings
 
 
@@ -51,6 +54,9 @@ class BrowserSessionRecord:
             "last_used_at": self.last_used_at,
             "expires_at": self.expires_at,
         }
+
+
+_logger = _logging.getLogger(__name__)
 
 
 class BrowserBackendAdapter(Protocol):
@@ -102,7 +108,9 @@ async def launch_local_browser(
     owner: str,
     headless: bool = False,
     profile_dir: Path | None = None,
+    storage_state: str | Path | None = None,
 ) -> dict[str, Any]:
+    logger = _logging.getLogger(__name__)
     from xninetzy.os.auth.policies.url_policy import assert_safe_url
 
     backend = LocalPlaywrightBackend()
@@ -116,6 +124,19 @@ async def launch_local_browser(
         Path.home() / ".local" / "share" / "xninetzy" / "auth" / "profiles" / safe_owner / safe_session
     )
     resolved_dir.mkdir(parents=True, exist_ok=True)
+
+    # Default: reuse Playwright MCP cookies if no explicit storage_state given.
+    # The Playwright MCP profile at ~/.cache/ms-playwright-mcp/mcp-chrome-*/Default/
+    # contains logged-in session cookies for Glints/Kalibrr that allow the same
+    # page loads to succeed when xninetzy launches its own Chromium instance.
+    if storage_state is None:
+        pw_state = (
+            Path.home()
+            / ".local" / "share" / "xninetzy" / "auth" / "profiles"
+            / "playwright-mcp-shared" / "storage_state.json"
+        )
+        if pw_state.exists():
+            storage_state = pw_state
     try:
         resolved_dir.chmod(0o700)
     except OSError:
@@ -123,10 +144,72 @@ async def launch_local_browser(
     url_check = assert_safe_url
     _ = url_check
     pw = await async_playwright().start()
-    context = await pw.chromium.launch_persistent_context(
+    # Anti-bot stealth: emulate human browser fingerprint so Cloudflare/Glints/Kalibrr
+    # allow the session to pass their JS challenge. Without these args, headless Chromium
+    # is fingerprinted as a bot and gets challenged.
+    stealth_args = [
+        "--disable-blink-features=AutomationControlled",
+        "--no-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-features=IsolateOrigins,site-per-process,AutomationControlled",
+    ]
+    launch_kwargs = dict(
         user_data_dir=str(resolved_dir),
         headless=headless,
+        args=stealth_args,
+        ignore_default_args=["--enable-automation"],
+        viewport={"width": 1920, "height": 1080},
+        user_agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36",
+        locale="en-US",
+        timezone_id="Asia/Jakarta",
     )
+    context = await pw.chromium.launch_persistent_context(**launch_kwargs)
+
+    from playwright_stealth import Stealth
+    await Stealth().apply_stealth_async(context)
+
+    # Apply storage_state cookies if provided (launch_persistent_context does
+    # not accept storage_state param directly, so we add cookies post-launch).
+    if storage_state is not None:
+        import json as _json
+        try:
+            ss_path = Path(str(storage_state))
+            if ss_path.exists():
+                ss_data = _json.loads(ss_path.read_text())
+                cookies_list = ss_data.get("cookies", [])
+                if cookies_list:
+                    from playwright.async_api import Cookie as _Cookie
+                    pw_cookies = []
+                    for c in cookies_list:
+                        raw_exp = c.get("expires", -1)
+                        try:
+                            exp_val = int(raw_exp) if raw_exp is not None else -1
+                        except (TypeError, ValueError):
+                            exp_val = -1
+                        if exp_val <= 0:
+                            exp_val = -1
+                        elif exp_val > 4102444800:
+                            exp_val = (exp_val // 1000000) - 11644473600
+                        cookie_kwargs = {
+                            "name": c.get("name"),
+                            "value": c.get("value"),
+                            "domain": c.get("domain", ""),
+                            "path": c.get("path", "/"),
+                            "expires": exp_val,
+                            "httpOnly": c.get("httpOnly", False),
+                            "secure": c.get("secure", False),
+                        }
+                        ss = c.get("sameSite", "None")
+                        if ss in ("Lax", "Strict", "None"):
+                            cookie_kwargs["sameSite"] = ss
+                        pw_cookies.append(_Cookie(**cookie_kwargs))
+                    await context.add_cookies(pw_cookies)
+                    logger.info(
+                        "loaded %d cookies from storage_state %s",
+                        len(pw_cookies), storage_state,
+                    )
+        except Exception as exc:
+            logger.warning("failed to apply storage_state %s: %s", storage_state, exc)
     _LOCAL_OPEN_HANDLES[session_id] = {"pw": pw, "context": context, "profile_dir": resolved_dir}
     _OPEN_HANDLES[session_id] = {
         "backend": "local",

@@ -1,0 +1,11 @@
+{
+  "id": "1",
+  "position": "Senior Python Developer",
+  "company": "Acme Corp",
+  "url": "https://remoteok.com/remote-jobs/1",
+  "apply_url": "https://acme.com/apply/1",
+  "tags": ["python", "fastapi", "remote"],
+  "description": "We are looking for a senior engineer to join our platform team. <p>Requirements: 5+ years Python.</p>",
+  "date": "2026-09-25",
+  "legal": null
+}

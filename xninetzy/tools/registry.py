@@ -455,6 +455,9 @@ from xninetzy.interfaces.media.media_tools import (
     media_read_document,
     media_read_image,
 )
+from xninetzy.tools.ecosystem.media_video_tools import (
+    media_video_tools as _MEDIA_VIDEO_TOOLS,
+)
 from xninetzy.workflow.tools import (
     workflow_status,
     workflow_latest,
@@ -588,11 +591,20 @@ from xninetzy.tools.ecosystem.harness_router_tools import (
     evidence_normalize,
     intent_resolve,
     recovery_choose,
-    task_state_record,
     tool_route,
+    task_state_record,
 )
 
+
+from xninetzy.tools.ecosystem.registry_extractor_tools import registry_extractor_tools
+import xninetzy.tools.ecosystem.routing_taxonomy_tools as _rtt
+
 _ALL_TOOLS: list[BaseTool] | None = None
+
+
+def _routing_pipeline_tools():
+    from xninetzy.tools.ecosystem.routing_pipeline_tools import routing_pipeline_tools_list
+    return routing_pipeline_tools_list
 
 
 def refresh_external_mcp_tools() -> int:
@@ -995,6 +1007,8 @@ def get_all_tools() -> list[BaseTool]:
             media_info,
             analyze_media,
             media_ingest_to_knowledge,
+            # Media (video creator / editor — deterministic, CPU-only)
+            *_MEDIA_VIDEO_TOOLS,
             # Multi-action workflow
             workflow_status,
             workflow_latest,
@@ -1129,30 +1143,33 @@ def get_all_tools() -> list[BaseTool]:
             observability_checkpoint,
             observability_recent_checkpoints,
             observability_perf_snapshot,
-            # S7: Harness router / state machine / recovery / claim ledger
-            intent_resolve,
-            evidence_normalize,
-            recovery_choose,
-            claim_ledger_record,
-            confidence_score,
-            tool_route,
-            task_state_record,
-        ]
-        from langchain_core.tools import tool as _langchain_tool
+# S7: Harness router / state machine / recovery / claim ledger
+        intent_resolve,
+        evidence_normalize,
+        recovery_choose,
+        claim_ledger_record,
+        confidence_score,
+        tool_route,
+        task_state_record,
+        *registry_extractor_tools,
+        *_rtt.routing_taxonomy_tools_list,
+        *_routing_pipeline_tools(),
+    ]
+    from langchain_core.tools import tool as _langchain_tool
 
-        normalized: list[BaseTool] = []
-        for item in _ALL_TOOLS:
-            if isinstance(item, BaseTool):
-                normalized.append(item)
-            elif callable(item) and not hasattr(item, "name"):
-                normalized.append(
-                    _langchain_tool(
-                        description=f"{getattr(item, '__name__', 'tool')} (xninetzy wrapper)",
-                    )(item)
-                )
-            else:
-                normalized.append(item)
-        _ALL_TOOLS = normalized
+    normalized: list[BaseTool] = []
+    for item in _ALL_TOOLS:
+        if isinstance(item, BaseTool):
+            normalized.append(item)
+        elif callable(item) and not hasattr(item, "name"):
+            normalized.append(
+                _langchain_tool(
+                    description=f"{getattr(item, '__name__', 'tool')} (xninetzy wrapper)",
+                )(item)
+            )
+        else:
+            normalized.append(item)
+    _ALL_TOOLS = normalized
     return _ALL_TOOLS
 
 
@@ -1483,5 +1500,21 @@ def get_tool_groups() -> dict[str, list[str]]:
             "media_read_audio",
             "media_info",
             "media_ingest_to_knowledge",
+            "video_project_create",
+            "video_project_inspect",
+            "video_project_export_json",
+            "video_template_apply",
+            "video_asset_import",
+            "video_scene_create",
+            "video_motion_apply",
+            "video_render",
+            "video_render_status",
+            "video_render_cancel",
+            "video_inspect",
+            "video_export",
+            "video_thumbnail_create",
+            "video_session_start",
+            "video_session_stop",
+            "video_renderer_health",
         ],
     }

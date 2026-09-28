@@ -27,27 +27,32 @@ class DeallsAdapter(BrowserScrapingAdapter):
     retry = RetryPolicy(max_attempts=2, backoff_base_seconds=2.0, backoff_max_seconds=8.0)
     circuit_breaker = CircuitBreaker(failure_threshold=3, open_duration_seconds=600.0)
 
-    SEARCH_URL = "https://dealls.com/opportunities/jobs?keyword=__QUERY__&country=ID"
+    SEARCH_URL = "https://dealls.com/?searchJob=__QUERY__&curatedJobs=true"
 
     def build_search_url(self, query: str, **kwargs) -> str:
         return self.SEARCH_URL.replace("__QUERY__", _quote(query))
 
     @property
     def wait_selector(self) -> str:
-        return "[data-test='job-card'], .job-card, .DeallsCard"
+        return "a[href*='/loker/']"
 
     def parse_jobs(self, html: str, *, query: str, limit: int) -> list:
         soup = BeautifulSoup(html, "lxml")
-        cards = soup.select("[data-test='job-card']") or soup.select(".job-card") or soup.select(".DeallsCard")
+        cards = soup.select("a[href*='/loker/']")
         records = []
         for card in cards:
-            a = card.select_one("a.job-link, .job-link, a[href*='opportunities']")
+            a = card if card.name == "a" else card.select_one("a[href*='/loker/']")
             if a is None:
                 continue
             title = a.get_text(strip=True)
             href = a.get("href", "")
             if not title:
                 continue
+            # Dealls job URLs are like /loker/<slug>~<company>. Nav URLs are short like
+            # /loker/saved, /loker/applied. Require the ~ separator (or long slug).
+            if not href or "~" not in href:
+                if href in ("/loker", "/loker/") or len(href.split("/")[-1]) < 15:
+                    continue
             slug = href.rstrip("/").split("/")[-1] if href else ""
             full_url = (
                 f"https://dealls.com{href}" if href.startswith("/") else href

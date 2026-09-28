@@ -16,6 +16,7 @@ INTENT_CLASSES = {
     "TECHNICAL",
     "EDITING",
     "REVIEW",
+    "MEDIA",
 }
 
 
@@ -28,6 +29,15 @@ INTENT_KEYWORDS = {
     "TECHNICAL": ["tutorial", "how-to", "README", "API", "runbook", "technical", "developer", "implementation guide", "outline", "structure"],
     "EDITING": ["edit", "revise", "polish", "rewrite", "improve draft", "proofread", "coherence", "terminology", "argument"],
     "REVIEW": ["review", "critique", "red team", "stress test", "challenge", "audit", "validate", "scoring", "rubric", "readiness", "submission"],
+    "MEDIA": [
+        "video", "motion", "render", "scene", "timeline",
+        "composition", "ken burns", "camera push", "camera pull",
+        "showcase", "tutorial", "demo", "storyboard",
+        "motion graphics", "remotion", "ffmpeg",
+        "after effects", "lower third", "title card",
+        "highlight", "spotlight", "callout", "zoom", "pan",
+        "animasi", "rendering", "preview", "showcase",
+    ],
 }
 
 
@@ -121,5 +131,6 @@ def pipeline_for_intent(intent_class: str) -> list[str]:
         "TECHNICAL": ["outline-builder", "evidence-synthesis", "technical-content-writer", "terminology-bank", "anti-slop"],
         "EDITING": ["argument-coherence", "terminology-bank", "professional-editor", "academic-editor", "anti-slop"],
         "REVIEW": ["source-evaluation", "citation-validation", "methodology-rater", "scoring-rubric", "paper-review", "proposal-red-team", "consultant-challenge", "anti-slop", "submission-readiness"],
+        "MEDIA": ["media-video-root", "media-video-capture", "media-video-edit", "media-video-motion", "media-video-render", "media-video-project-demo", "media-video-tutorial", "media-video-development"],
     }
     return pipelines.get(intent_class, [])

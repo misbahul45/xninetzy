@@ -107,7 +107,14 @@ class GatewayBrowserSession:
             context = handle["context"]
             page = context.pages[0] if context.pages else await context.new_page()
             self._page = page
-            await page.goto(url, wait_until="domcontentloaded", timeout=timeout_ms)
+            try:
+                await page.goto(url, wait_until="domcontentloaded", timeout=timeout_ms)
+            except Exception:
+                pass
+            try:
+                await page.wait_for_load_state("networkidle", timeout=min(8000, timeout_ms))
+            except Exception:
+                logger.debug("networkidle timeout on %s", url)
             if wait_selector:
                 try:
                     await page.wait_for_selector(wait_selector, timeout=timeout_ms)

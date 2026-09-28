@@ -33,14 +33,14 @@ class GlintsAdapter(BrowserScrapingAdapter):
 
     @property
     def wait_selector(self) -> str:
-        return ".Opportunityscard, [data-test='job-card']"
+        return "article[role='article'], a[aria-label*='Job card title']"
 
     def parse_jobs(self, html: str, *, query: str, limit: int) -> list:
         soup = BeautifulSoup(html, "lxml")
-        cards = soup.select(".Opportunityscard") or soup.select("[data-test='job-card']")
+        cards = soup.select("article[role='article']") or soup.select("a[aria-label*='Job card title']")
         records = []
         for card in cards:
-            a = card.select_one(".Opportunityscard__link, a.job-title, h1 a, h2 a")
+            a = card if card.name == 'a' else card.select_one("a[aria-label*='Job card title'], h1 a, h2 a")
             if a is None:
                 continue
             title = a.get_text(strip=True)

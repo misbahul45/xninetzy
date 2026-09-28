@@ -254,3 +254,29 @@ def test_intake_modules_stay_pure_filesystem_only():
         "intake/ must stay filesystem-only; no subprocess/git/network calls (boundary enforced by AGENTS.md §3):\n"
         + "\n".join(offenders)
     )
+
+
+def test_context_modules_disallow_subprocess_imports():
+    """context/ must stay orchestration-only. Binary execution belongs in
+    ``xninetzy/interfaces/**``. The test catches both top-level imports
+    (``import subprocess``) and inline references (``subprocess.run``,
+    ``subprocess.Popen``).
+    """
+    FORBIDDEN_SUBPROCESS = ("import subprocess", "from subprocess")
+    FORBIDDEN_CALLS = ("subprocess.run", "subprocess.Popen", "subprocess.call")
+    files = _python_files(CONTEXT_ROOT)
+    offenders: list[str] = []
+    for path in files:
+        text = path.read_text(encoding="utf-8")
+        for line_no, line in enumerate(text.splitlines(), start=1):
+            stripped = line.strip()
+            if any(stripped.startswith(tok) for tok in FORBIDDEN_SUBPROCESS):
+                offenders.append(f"{path}:{line_no}: {stripped}")
+                continue
+            if any(call in stripped for call in FORBIDDEN_CALLS):
+                offenders.append(f"{path}:{line_no}: {stripped}")
+    assert not offenders, (
+        "context/ modules must not import subprocess or invoke it inline; "
+        "binary execution lives under xninetzy/interfaces/**:\n"
+        + "\n".join(offenders)
+    )

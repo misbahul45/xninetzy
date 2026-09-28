@@ -26,18 +26,18 @@ class JobstreetIDAdapter(BrowserScrapingAdapter):
     retry = RetryPolicy(max_attempts=2, backoff_base_seconds=3.0, backoff_max_seconds=10.0)
     circuit_breaker = CircuitBreaker(failure_threshold=2, open_duration_seconds=900.0)
 
-    SEARCH_URL = "https://id.jobstreet.com/id/job-search?keywords=__QUERY__&location=Indonesia"
+    SEARCH_URL = "https://id.jobstreet.com/intern-jobs"
 
     def build_search_url(self, query: str, **kwargs) -> str:
         return self.SEARCH_URL.replace("__QUERY__", _quote(query))
 
     @property
     def wait_selector(self) -> str:
-        return "[data-automation='job-item'], article[data-automation='job-item']"
+        return "a[href*='/job/']"
 
     def parse_jobs(self, html: str, *, query: str, limit: int) -> list:
         soup = BeautifulSoup(html, "lxml")
-        cards = soup.select("[data-automation='job-item']") or soup.select("article.job-card")
+        cards = soup.select("article[data-automation='job-item']") or soup.select("a[href*='/job/']")
         records = []
         for card in cards:
             a = card.select_one("h1.job-title a, .job-title a, a[data-automation='job-title']")

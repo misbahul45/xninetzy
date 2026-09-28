@@ -3,6 +3,36 @@
 Format: [Keep a Changelog 1.1](https://keepachangelog.com/en/1.1.0/).
 Versions follow [Semantic Versioning](https://semver.org/).
 
+## 2026-09-28 — CLI Prompt Injection Sub-A
+
+### Added
+- **L0 hot prompt** (`~/.xninetzy/CORE_PROMPT.md`): reordered with
+  Routing-First as section #1, ~50 baris / ~600 token.
+- **L1 master rules** (`~/.xninetzy/CORE_RULES.md`): NEW file with
+  forbidden/required behaviors, memory/workflow hooks, slash command
+  mapping, permission context.
+- **L2 CLI overrides**: OpenCode (`xninetzy-paksa.md`), Claude Code
+  (`CLAUDE.md`), Codex (`AGENTS.md`), arkcli (conditional).
+- **Verification script** (`scripts/verify_prompt_injection.sh`):
+  automated check for L0/L1/L2 integrity.
+- **Smoke test plan** (`docs/prompt-injection-core/SMOKE-TEST.md`):
+  manual verification matrix for 5 queries × 4 CLIs.
+
+### Changed
+- L0 (`CORE_PROMPT.md`) reordered: sections #1-#5 follow
+  Routing → Reasoning → Workflow → MCP Priority → Skill Loading.
+- L1 replaces inline forbidden/required/permission content previously in L0.
+
+### Deferred (Sub-B and Sub-C)
+- Memory deep-dive (`CORE_MEMORY.md`)
+- Workflow deep-dive (`CORE_WORKFLOW.md`)
+- Lightning / Graph / Ingest (`CORE_KNOWLEDGE.md`)
+
+### References
+- Spec: `docs/superpowers/specs/2026-09-28-cli-prompt-injection-core-routing-design.md`
+- Plan: `docs/superpowers/plans/2026-09-28-cli-prompt-injection-core-routing.md`
+- Backups: `~/.xninetzy/.backup/2026-09-28-prompt-injection/`
+
 ## [2.2.0] — 2026-09-11 — MCP-only pivot
 
 ### Removed

@@ -80,13 +80,15 @@ The codebase already exposes 508 MCP tools via the `xninetzy` MCP server, with a
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│ L0: HOT PROMPT (~40 baris, ~500 token, SELALU di-load)  │
+│ L0: HOT PROMPT (~50 baris, ~600 token, SELALU di-load)  │
 │ ~/.xninetzy/CORE_PROMPT.md                               │
 │ ──────────────────────────────────────────────────────── │
-│ #1 ROUTING-FIRST        ← directive + minimal reference │
-│ #2 WORKFLOW LOCK        UNDERSTAND→VERIFY                │
-│ #3 MCP TOOL PRIORITY    tabel 10 rank                    │
-│ #4 SKILL LOADING ORDER  3 baris                          │
+│ Identity Lock          (meta, top)                       │
+│ #1 ROUTING-FIRST       ← directive + minimal reference  │
+│ #2 Reasoning Engine Lock (sequential thinking)            │
+│ #3 WORKFLOW LOCK       UNDERSTAND→VERIFY                 │
+│ #4 MCP TOOL PRIORITY   tabel 10 rank                     │
+│ #5 SKILL LOADING ORDER 3 baris                           │
 └──────────────────────────────────────────────────────────┘
                           │
                           ▼ (@-reference dari L2)
@@ -94,11 +96,11 @@ The codebase already exposes 508 MCP tools via the `xninetzy` MCP server, with a
 │ L1: MASTER RULES (~120 baris, ~1.5K token)               │
 │ ~/.xninetzy/CORE_RULES.md   (NEW FILE)                   │
 │ ──────────────────────────────────────────────────────── │
-│ #5 Forbidden behaviors (8 rules)                         │
-│ #6 Required behaviors (8 rules)                          │
-│ #7 Memory & Workflow hooks (basic)                       │
-│ #8 Slash command mapping (xn-* → CLI-native)             │
-│ #9 Permission context                                    │
+│ #6 Forbidden behaviors (8 rules)                         │
+│ #7 Required behaviors (8 rules)                          │
+│ #8 Memory & Workflow hooks (basic)                       │
+│ #9 Slash command mapping (xn-* → CLI-native)             │
+│ #10 Permission context                                   │
 └──────────────────────────────────────────────────────────┘
                           │
                           ▼ (CLI config: 3+ lokasi)
@@ -118,7 +120,13 @@ The codebase already exposes 508 MCP tools via the `xninetzy` MCP server, with a
 
 ### 3.2 L0 — Hot Prompt (reorder + expand existing `CORE_PROMPT.md`)
 
-The existing `~/.xninetzy/CORE_PROMPT.md` becomes L0. Sections are **reordered** so routing-first is at the top, then workflow, then tool priority, then skill loading.
+The existing `~/.xninetzy/CORE_PROMPT.md` becomes L0. Sections are **reordered** per user's chosen sequence: **Routing → Workflow → Tools → Skill → Validation**, with Identity Lock as a meta-header at the top and Reasoning Engine Lock between Routing and Workflow.
+
+**Identity Lock (meta, top, ~3 baris)** — preserved from existing `CORE_PROMPT.md`:
+```markdown
+You operate as the Xninetzy Personal Learning OS & Life OS agent.
+Default agent is `xninetzy`. Domain owner scope is the local installation.
+```
 
 **Required new section #1 (Routing-First, ~15 baris):**
 
@@ -143,12 +151,39 @@ Ringkasan referensi:
   • Tool Routing Layers: L2_domain → L3_skill → L4_task → L5_tool → L5_capability
 ```
 
-**Preserved sections (existing CORE_PROMPT.md):**
-- Identity Lock → moves to top, before Routing-First (it's truly higher priority: "You are Xninetzy")
-- Reasoning Engine Lock (sequential thinking) → moves to section #2, after routing
-- Workflow Lock → section #3
-- MCP Tools Priority → section #4
-- Skill Loading Order → section #5 (compressed to 3 baris in L0, full version in L1)
+**Section #2 (Reasoning Engine Lock, ~3 baris)** — preserved, compressed:
+```markdown
+# #2 REASONING ENGINE LOCK
+When `sequentialthinking` MCP is available, invoke it FIRST and LAST on every
+non-trivial step. Reasoning chain = the system; answer = side-effect.
+```
+
+**Section #3 (Workflow Lock, ~3 baris)** — preserved:
+```markdown
+# #3 WORKFLOW LOCK
+UNDERSTAND → LEARN → RESEARCH → DECIDE → BUILD → VERIFY → CONTINUE.
+Every non-trivial turn must traverse this chain.
+```
+
+**Section #4 (MCP Tools Priority, ~12 baris)** — preserved, compressed:
+```markdown
+# #4 MCP TOOLS PRIORITY
+| Rank | Prefix | Domain |
+| 1 | xninetzy_* | owner-scoped OS |
+| 2 | sequentialthinking | reasoning |
+| 3 | codebase-memory-mcp | code structure |
+| 4-9 | paper_research, context7, web_search, youtube_search, markitdown, playwright | (see CORE_RULES) |
+| 10 | powerpoint / document_generator | artifact output |
+Generic vendor tools (Read/Write/Bash) = last resort.
+```
+
+**Section #5 (Skill Loading Order, ~3 baris)** — compressed to 3 baris in L0, full version in L1:
+```markdown
+# #5 SKILL LOADING ORDER
+1. xninetzy_skill_suggest_for_request(query)
+2. xninetzy_skill_get(top_match) + progressive resource disclosure
+3. Follow procedure → run validation pass (full details in CORE_RULES.md)
+```
 
 ### 3.3 L1 — Master Rules (new file `~/.xninetzy/CORE_RULES.md`)
 
@@ -349,7 +384,7 @@ set -euo pipefail
 # L0 checks
 test -f ~/.xninetzy/CORE_PROMPT.md || { echo "FAIL: L0 missing"; exit 1; }
 LINES=$(wc -l < ~/.xninetzy/CORE_PROMPT.md)
-test "$LINES" -le 60 || { echo "WARN: L0 too long ($LINES > 60)"; }
+test "$LINES" -le 60 || { echo "WARN: L0 too long ($LINES > 60, target ≤50)"; }
 
 # L1 checks
 test -f ~/.xninetzy/CORE_RULES.md || { echo "FAIL: L1 missing"; exit 1; }
@@ -432,8 +467,8 @@ Sub-C (Lightning + Graph + Ingest)  ← butuh memory context
 
 **Definition of done for Sub-A:**
 
-1. ✅ `~/.xninetzy/CORE_PROMPT.md` reordered with Routing-First as section #1
-2. ✅ `~/.xninetzy/CORE_RULES.md` created with forbidden/required rules, slash mapping, permission context
+1. ✅ `~/.xninetzy/CORE_PROMPT.md` reordered with Routing-First as section #1 (Identity Lock as meta-header, Reasoning Engine as #2, Workflow as #3, MCP Priority as #4, Skill Loading as #5)
+2. ✅ `~/.xninetzy/CORE_RULES.md` created with forbidden/required rules (sections #6-#7), memory/workflow hooks (#8), slash mapping (#9), permission context (#10)
 3. ✅ OpenCode override updated at `~/.config/opencode/instructions/xninetzy-paksa.md`
 4. ✅ Claude Code override created at `~/.claude/CLAUDE.md`
 5. ✅ Codex override updated at `~/.codex/AGENTS.md`
@@ -441,7 +476,7 @@ Sub-C (Lightning + Graph + Ingest)  ← butuh memory context
 7. ✅ `scripts/verify_prompt_injection.sh` passes
 8. ✅ All 5 representative queries route correctly in each CLI (manual smoke test)
 9. ✅ No regression: existing forbidden/required behaviors preserved
-10. ✅ Token budget: L0 ≤ 40 baris (~500 token)
+10. ✅ Token budget: L0 ≤ 50 baris (~600 token) — bumped from 40 due to Identity Lock + Reasoning Engine Lock inclusion
 
 **Out of scope for Sub-A (will not implement):**
 - Memory deep-dive (Sub-B)
@@ -487,7 +522,7 @@ This is a follow-up task and will be scheduled separately after Sub-A implementa
 
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|
-| L0 prompt grows beyond 40 baris over time | Medium | High — defeats context efficiency goal | Add L0 length check to `verify_prompt_injection.sh`, warn at >60 baris |
+| L0 prompt grows beyond 50 baris over time | Medium | High — defeats context efficiency goal | Add L0 length check to `verify_prompt_injection.sh`, warn at >60 baris |
 | CLI override files drift from L0/L1 contract | Medium | Medium — silent behavior inconsistency | Single source of truth: forbid behavior contract in L2; L2 only references L0/L1 |
 | arkcli CLI configuration unknown | Low | Low — skip if missing | Verify at audit, log warning, do not fail other CLIs |
 | Existing CLI configs lose specific quirks during refactor | Medium | Medium — break CLI-specific features | Capture existing quirks BEFORE refactor; preserve in L2 |

@@ -190,7 +190,9 @@ def image_preprocess(
         from xninetzy.core.paths import ArtifactPathError, resolve_artifact_output
 
         try:
-            out = resolve_artifact_output(output_path, create_parents=True)
+            out = resolve_artifact_output(
+                output_path, create_parents=True, extra_roots=(resolved.parent,)
+            )
         except ArtifactPathError as exc:
             return json.dumps({"error": str(exc)}, ensure_ascii=False)
     else:
@@ -272,7 +274,9 @@ def image_crop(
         from xninetzy.core.paths import ArtifactPathError, resolve_artifact_output
 
         try:
-            out = resolve_artifact_output(output_path, create_parents=True)
+            out = resolve_artifact_output(
+                output_path, create_parents=True, extra_roots=(resolved.parent,)
+            )
         except ArtifactPathError as exc:
             return json.dumps({"error": str(exc)}, ensure_ascii=False)
     else:

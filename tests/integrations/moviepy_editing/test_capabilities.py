@@ -44,10 +44,14 @@ def test_tool_blocks_output_outside_artifact_roots(monkeypatch, tmp_path):
     from xninetzy.core.config import get_settings
     from xninetzy.tools.ecosystem import moviepy_tools
 
-    src = tmp_path / "in.mp4"
+    src_dir = tmp_path / "inputs"
+    src_dir.mkdir()
+    src = src_dir / "in.mp4"
     src.write_bytes(b"data")
     root = tmp_path / "artifacts"
     root.mkdir()
+    escape_dir = tmp_path / "elsewhere"
+    escape_dir.mkdir()
     for key in (
         "OUTPUT_DIR", "GENERATED_DOCUMENTS_DIR", "RESEARCH_OUTPUT_DIR",
         "UNTRACKED_OUTPUT_DIR", "VIDEO_OUTPUT_DIR", "DATA_DIR",
@@ -58,7 +62,7 @@ def test_tool_blocks_output_outside_artifact_roots(monkeypatch, tmp_path):
     try:
         out = json.loads(
             moviepy_tools.moviepy_reframe.invoke(
-                {"input_path": str(src), "output_path": str(tmp_path / "escape.mp4")}
+                {"input_path": str(src), "output_path": str(escape_dir / "escape.mp4")}
             )
         )
         assert out["status"] == "error"

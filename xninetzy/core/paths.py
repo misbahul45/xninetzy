@@ -47,6 +47,7 @@ def resolve_artifact_output(
     *,
     settings: Settings | None = None,
     create_parents: bool = False,
+    extra_roots: tuple[str | Path, ...] = (),
 ) -> Path:
     current = settings or get_settings()
     raw = str(path or "").strip()
@@ -56,7 +57,11 @@ def resolve_artifact_output(
         raise ArtifactPathError("output path contains a null byte")
     resolved = Path(raw).expanduser().resolve()
     if getattr(current, "ARTIFACT_ALLOWLIST", True):
-        roots = artifact_write_roots(current)
+        roots = list(artifact_write_roots(current))
+        for extra in extra_roots:
+            extra_resolved = _resolved(str(extra))
+            if extra_resolved is not None and extra_resolved not in roots:
+                roots.append(extra_resolved)
         if not any(_within(resolved, root) for root in roots):
             allowed = ", ".join(str(root) for root in roots) or "(none configured)"
             raise ArtifactPathError(

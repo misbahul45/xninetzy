@@ -67,7 +67,13 @@ def moviepy_reframe(
     from xninetzy.core.paths import ArtifactPathError, resolve_artifact_output
 
     try:
-        safe_output = str(resolve_artifact_output(output_path, create_parents=True))
+        safe_output = str(
+            resolve_artifact_output(
+                output_path,
+                create_parents=True,
+                extra_roots=(os.path.dirname(os.path.abspath(input_path)),),
+            )
+        )
     except ArtifactPathError as exc:
         return _ok({"status": "error", "error": str(exc)})
     width, height = _resolve_target(target_width, target_height, platform)
@@ -119,7 +125,13 @@ def moviepy_concat(
     from xninetzy.core.paths import ArtifactPathError, resolve_artifact_output
 
     try:
-        safe_output = str(resolve_artifact_output(output_path, create_parents=True))
+        safe_output = str(
+            resolve_artifact_output(
+                output_path,
+                create_parents=True,
+                extra_roots=(os.path.dirname(os.path.abspath(paths[0])),),
+            )
+        )
     except ArtifactPathError as exc:
         return _ok({"status": "error", "error": str(exc)})
     from xninetzy.integrations.moviepy.editor import concat_videos

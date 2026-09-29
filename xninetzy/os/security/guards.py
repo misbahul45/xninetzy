@@ -52,17 +52,55 @@ class _PrivateNetworks:
 _PRIVATE_NETWORKS = _PrivateNetworks().networks
 
 
+def _coerce_ip(host: str) -> ipaddress._BaseAddress | None:
+    try:
+        return ipaddress.ip_address(host)
+    except ValueError:
+        pass
+    if re.fullmatch(r"\d+", host):
+        try:
+            value = int(host)
+        except ValueError:
+            return None
+        if 0 <= value <= 0xFFFFFFFF:
+            return ipaddress.ip_address(value)
+        if 0 <= value <= 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF:
+            return ipaddress.ip_address(value)
+    if re.fullmatch(r"0x[0-9a-fA-F]+", host):
+        try:
+            value = int(host, 16)
+        except ValueError:
+            return None
+        if 0 <= value <= 0xFFFFFFFF:
+            return ipaddress.ip_address(value)
+    return None
+
+
+def _addr_is_blocked(addr: ipaddress._BaseAddress) -> bool:
+    if getattr(addr, "version", None) == 6 and getattr(addr, "ipv4_mapped", None):
+        addr = addr.ipv4_mapped
+    if any(addr in net for net in _PRIVATE_NETWORKS):
+        return True
+    return bool(
+        addr.is_private
+        or addr.is_loopback
+        or addr.is_link_local
+        or addr.is_multicast
+        or addr.is_reserved
+        or addr.is_unspecified
+    )
+
+
 def _host_is_private(host: str) -> bool:
     if not host:
         return True
-    lowered = host.lower().strip()
-    if lowered == "localhost":
+    lowered = host.lower().strip().strip("[]")
+    if lowered in {"localhost", "localhost.localdomain"} or lowered.endswith(".localhost"):
         return True
-    try:
-        addr = ipaddress.ip_address(lowered)
-    except ValueError:
-        return False
-    return any(addr in net for net in _PRIVATE_NETWORKS)
+    addr = _coerce_ip(lowered)
+    if addr is not None:
+        return _addr_is_blocked(addr)
+    return False
 
 
 def redact_secrets(text: str) -> str:
@@ -88,12 +126,17 @@ async def safe_fetch(
     if not allow_private and _host_is_private(host):
         raise SecurityError("SSRF_BLOCKED", f"host private/loopback: {host}")
     async with httpx.AsyncClient(timeout=timeout_seconds, trust_env=False) as client:
-        response = await client.get(url, follow_redirects=False)
-    if len(response.content) > max_bytes:
-        raise SecurityError("RESPONSE_TOO_LARGE", f"body > {max_bytes} bytes")
-    if response.status_code >= 400:
-        raise SecurityError(
-            "HTTP_ERROR",
-            f"status {response.status_code} for {parsed.hostname}",
-        )
-    return response.content
+        async with client.stream("GET", url, follow_redirects=False) as response:
+            if response.status_code >= 400:
+                raise SecurityError(
+                    "HTTP_ERROR",
+                    f"status {response.status_code} for {parsed.hostname}",
+                )
+            chunks: list[bytes] = []
+            total = 0
+            async for chunk in response.aiter_bytes():
+                total += len(chunk)
+                if total > max_bytes:
+                    raise SecurityError("RESPONSE_TOO_LARGE", f"body > {max_bytes} bytes")
+                chunks.append(chunk)
+            return b"".join(chunks)

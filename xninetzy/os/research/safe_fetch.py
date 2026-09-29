@@ -77,19 +77,27 @@ async def safe_get(
         trust_env=False,
     ) as client:
         for _ in range(MAX_REDIRECTS + 1):
-            response = await client.get(
+            async with client.stream(
+                "GET",
                 current,
                 headers={"User-Agent": "Xninetzy-Research/1.0", "Accept": "text/html,text/plain"},
-            )
-            if response.is_redirect:
-                location = response.headers.get("location")
-                if not location:
-                    raise UnsafeUrlError("Redirect tanpa lokasi")
-                current = _validate_url(str(response.url.join(location)))
-                continue
-            response.raise_for_status()
-            if not _content_type_allowed(response.headers.get("content-type", "")):
-                raise UnsafeUrlError("Tipe konten tidak diizinkan")
-            body = response.content[:max_bytes]
-            return body.decode(response.encoding or "utf-8", errors="replace")
+            ) as response:
+                if response.is_redirect:
+                    location = response.headers.get("location")
+                    if not location:
+                        raise UnsafeUrlError("Redirect tanpa lokasi")
+                    current = _validate_url(str(response.url.join(location)))
+                    continue
+                response.raise_for_status()
+                if not _content_type_allowed(response.headers.get("content-type", "")):
+                    raise UnsafeUrlError("Tipe konten tidak diizinkan")
+                chunks: list[bytes] = []
+                total = 0
+                async for chunk in response.aiter_bytes():
+                    chunks.append(chunk)
+                    total += len(chunk)
+                    if total >= max_bytes:
+                        break
+                body = b"".join(chunks)[:max_bytes]
+                return body.decode(response.encoding or "utf-8", errors="replace")
     raise UnsafeUrlError("Terlalu banyak redirect")

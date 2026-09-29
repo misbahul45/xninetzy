@@ -444,6 +444,7 @@ from xninetzy.domains.it_learning.concept_graph import (
 from xninetzy.domains.it_learning.recall import (
     learning_create_recall_card,
     learning_due_recall,
+    learning_recall_forecast,
     learning_submit_recall_answer,
 )
 from xninetzy.os.notifications.admin_notifier import admin_notify_progress
@@ -977,6 +978,7 @@ def get_all_tools() -> list[BaseTool]:
             learning_get_concept_map,
             learning_create_recall_card,
             learning_due_recall,
+            learning_recall_forecast,
             learning_submit_recall_answer,
             # Graph RAG
             graph_add_node,
@@ -1343,6 +1345,7 @@ def get_tool_groups() -> dict[str, list[str]]:
             "learning_start_study_session",
             "learning_complete_study_session",
             "learning_list_study_sessions",
+            "learning_recall_forecast",
         ],
         "knowledge": ["knowledge_ingest_text", "knowledge_search", "knowledge_answer", "knowledge_evaluate_retrieval"],
         "unified_search": ["unified_search"],

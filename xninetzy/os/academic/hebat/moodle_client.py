@@ -15,6 +15,9 @@ from xninetzy.os.academic.hebat.browser_session import (
     get_page_html,
     relogin_hebat,
 )
+from xninetzy.os.academic.hebat.fetch_cache import (
+    fetch_assignment_detail_cache,
+)
 from xninetzy.os.academic.hebat.parsers import (
     is_logged_out,
     is_login_redirect,
@@ -137,6 +140,20 @@ async def fetch_assignment_detail(chat_id: str, cmid: str) -> dict:
     if not html:
         return {}
     return parse_assignment_page(html)
+
+
+async def fetch_assignment_detail_cached(chat_id: str, cmid: str) -> dict:
+    s = get_settings()
+    cache_key = (chat_id, cmid)
+    cached = fetch_assignment_detail_cache.get(cache_key)
+    if cached:
+        return cached
+    detail = await fetch_assignment_detail(chat_id, cmid)
+    if detail:
+        fetch_assignment_detail_cache.set(
+            cache_key, detail, ttl=float(s.HEBAT_FETCH_CACHE_TTL_SECONDS)
+        )
+    return detail
 
 
 def _is_login_html_bytes(content_type: str, head: bytes) -> bool:

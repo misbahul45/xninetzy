@@ -315,9 +315,13 @@ class Settings(BaseSettings):
     # Max automatic re-logins per request when a stale cookie redirects to /login.
     # Bounds the relogin+retry loop so a permanently-broken session can't spin forever.
     HEBAT_SESSION_MAX_RELOGIN: int = 2
-    # Persist raw/cleaned HTML to disk on failure for offline debugging.
     HEBAT_DEBUG_SAVE_HTML: bool = False
     HEBAT_DEBUG_HTML_DIR: str = "/app/data/hebat/debug-html"
+
+    HEBAT_SYNC_TOTAL_BUDGET_SECONDS: float = 95.0
+    HEBAT_SYNC_ITEM_TIMEOUT_SECONDS: float = 15.0
+    HEBAT_SYNC_CONCURRENCY: int = 3
+    HEBAT_FETCH_CACHE_TTL_SECONDS: float = 90.0
 
     # Multi-action workflow engine
     WORKFLOW_ENABLED: bool = True
@@ -392,6 +396,15 @@ class Settings(BaseSettings):
             for h in self.HEBAT_REMINDER_BEFORE_HOURS.split(",")
             if h.strip().isdigit()
         ]
+
+    def hebat_sync_total_budget_seconds(self) -> float:
+        return float(self.HEBAT_SYNC_TOTAL_BUDGET_SECONDS)
+
+    def hebat_sync_item_timeout_seconds(self) -> float:
+        return float(self.HEBAT_SYNC_ITEM_TIMEOUT_SECONDS)
+
+    def hebat_sync_concurrency(self) -> int:
+        return max(1, int(self.HEBAT_SYNC_CONCURRENCY))
 
     # Knowledge / Vector memory
     KNOWLEDGE_ENABLED: bool = True

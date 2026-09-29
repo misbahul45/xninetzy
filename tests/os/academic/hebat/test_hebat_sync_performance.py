@@ -33,7 +33,7 @@ async def test_sync_handles_many_without_timeout():
         return mock_detail
 
     with patch("xninetzy.os.academic.hebat.tools.list_activities", return_value=mock_activities), patch(
-        "xninetzy.os.academic.hebat.tools.fetch_assignment_detail", side_effect=fake_fetch
+        "xninetzy.os.academic.hebat.tools.fetch_assignment_detail_cached", side_effect=fake_fetch
     ), patch("xninetzy.os.academic.hebat.tools.upsert_assignment", return_value=999), patch(
         "xninetzy.os.academic.hebat.tools.sync_assignment_task", return_value=(1, True)
     ), patch(
@@ -43,12 +43,21 @@ async def test_sync_handles_many_without_timeout():
     ), patch(
         "xninetzy.os.academic.hebat.tools.get_settings"
     ) as mock_settings:
-        # Use small rate limit for test; old sequential would be 20*0.2=4s, new concurrent ~0.8s
         class S:
             HEBAT_RATE_LIMIT_SECONDS = 0.1
+            HEBAT_FETCH_CACHE_TTL_SECONDS = 90.0
 
             def hebat_reminder_hours(self):
                 return [24]
+
+            def hebat_sync_total_budget_seconds(self):
+                return 60.0
+
+            def hebat_sync_item_timeout_seconds(self):
+                return 15.0
+
+            def hebat_sync_concurrency(self):
+                return 5
 
             APP_TIMEZONE = "Asia/Jakarta"
 

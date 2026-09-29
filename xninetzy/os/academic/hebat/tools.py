@@ -26,6 +26,8 @@ from xninetzy.os.academic.hebat.models import (
 from xninetzy.os.academic.hebat.moodle_client import (
     download_file,
     fetch_assignment_detail,
+    fetch_assignment_detail_cached,
+    fetch_assignment_detail_cache,
     fetch_course_activities,
     fetch_courses,
 )
@@ -646,17 +648,26 @@ async def hebat_sync_assignments(chat_id: str, course_id: str | None = None) -> 
     synced = 0
     reminders_created = 0
     tasks_created = 0
+    skipped_cached = 0
     now = _now(s)
-    # Concurrency fix: avoid MCP 120s timeout by processing with semaphore and per-item timeout
-    sem = asyncio.Semaphore(5)
+    total_budget = s.hebat_sync_total_budget_seconds()
+    item_timeout = s.hebat_sync_item_timeout_seconds()
+    concurrency = s.hebat_sync_concurrency()
+    sem = asyncio.Semaphore(concurrency)
     counters_lock = asyncio.Lock()
+    deadline_at = asyncio.get_event_loop().time() + total_budget
 
     async def _process_one(act: dict):
-        nonlocal synced, reminders_created, tasks_created
+        nonlocal synced, reminders_created, tasks_created, skipped_cached
         async with sem:
+            if asyncio.get_event_loop().time() >= deadline_at:
+                return
             cmid = act["cmid"]
+            cached = fetch_assignment_detail_cache.get((chat_id, cmid))
             try:
-                detail = await asyncio.wait_for(fetch_assignment_detail(chat_id, cmid), timeout=25)
+                detail = await asyncio.wait_for(
+                    fetch_assignment_detail_cached(chat_id, cmid), timeout=item_timeout
+                )
             except asyncio.TimeoutError:
                 logger.warning("hebat_sync_timeout cmid=%s", cmid)
                 return
@@ -665,6 +676,9 @@ async def hebat_sync_assignments(chat_id: str, course_id: str | None = None) -> 
                 return
             if not detail:
                 return
+            if cached is not None and cached is detail:
+                async with counters_lock:
+                    skipped_cached += 1
 
             activity_id = act["id"]
             assign = HebatAssignment(
@@ -736,18 +750,60 @@ async def hebat_sync_assignments(chat_id: str, course_id: str | None = None) -> 
                                 reminders_created += 1
                         except Exception as e:
                             logger.warning("Failed to create reminder: %s", e)
-            # Respect rate limit but distribute across concurrency: sleep a fraction
             await asyncio.sleep(
-                s.HEBAT_RATE_LIMIT_SECONDS / 5 if s.HEBAT_RATE_LIMIT_SECONDS else 0.2
+                s.HEBAT_RATE_LIMIT_SECONDS / concurrency if s.HEBAT_RATE_LIMIT_SECONDS else 0.2
             )
 
-    await asyncio.gather(*(_process_one(act) for act in assign_activities))
+    total_items = len(assign_activities)
+    timed_out = False
+
+    async def _run_with_budget():
+        await asyncio.gather(*(_process_one(act) for act in assign_activities))
+
+    try:
+        await asyncio.wait_for(_run_with_budget(), timeout=total_budget + 1.0)
+    except asyncio.TimeoutError:
+        timed_out = True
+
+    if timed_out:
+        processed = synced + skipped_cached
+        logger.warning(
+            "hebat_sync_partial budget=%.1fs processed=%d/%d",
+            total_budget, processed, total_items,
+        )
+
+    if not synced and not reminders_created and not tasks_created:
+        if total_items == 0:
+            return "Tidak ada assignment ditemukan di database. Sync course activities dulu."
+        if timed_out:
+            return (
+                f"⚠️ Sync dihentikan oleh deadline ({total_budget:.0f}s). "
+                f"0/{total_items} berhasil. Coba lagi dengan `course_id` lebih kecil, "
+                "atau tunggu sebentar lalu ulangi — item yang sudah ter-cache akan dilewati."
+            )
+
+    suffix = ""
+    if timed_out:
+        processed = synced + skipped_cached
+        suffix = (
+            f"\n\n⚠️ Dihentikan oleh deadline {total_budget:.0f}s — "
+            f"{processed}/{total_items} item selesai. Coba lagi untuk melanjutkan "
+            "(item ter-cache dilewati otomatis)."
+        )
+
+    cache_note = (
+        f"• {skipped_cached} tugas dilewati dari cache (TTL {s.HEBAT_FETCH_CACHE_TTL_SECONDS:.0f}s)\n"
+        if skipped_cached
+        else ""
+    )
 
     return (
-        f"✅ Sync assignment selesai.\n"
+        f"✅ Sync assignment selesai ({total_items} total).\n"
         f"• {synced} tugas diperbarui\n"
+        f"{cache_note}"
         f"• {tasks_created} task Life OS baru dibuat\n"
-        f"• {reminders_created} reminder baru dibuat\n\n"
+        f"• {reminders_created} reminder baru dibuat"
+        f"{suffix}\n\n"
         "Ketik 'lihat tugas hebat' untuk melihat daftar tugas."
     )
 
@@ -772,7 +828,7 @@ async def hebat_get_assignment_detail(chat_id: str, assignment_id_or_url: str) -
         )
     cmid, url = resolved
 
-    detail = await fetch_assignment_detail(chat_id, cmid)
+    detail = await fetch_assignment_detail_cached(chat_id, cmid)
     if not detail:
         return "Tidak bisa mengambil detail tugas."
 
@@ -1260,6 +1316,7 @@ async def hebat_remove_submission(
     if err:
         return err
 
+    fetch_assignment_detail_cache.pop((chat_id, cmid), None)
     detail = await fetch_assignment_detail(chat_id, cmid)
     if not detail:
         return "Tidak bisa mengambil detail tugas."

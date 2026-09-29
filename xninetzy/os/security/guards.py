@@ -126,12 +126,17 @@ async def safe_fetch(
     if not allow_private and _host_is_private(host):
         raise SecurityError("SSRF_BLOCKED", f"host private/loopback: {host}")
     async with httpx.AsyncClient(timeout=timeout_seconds, trust_env=False) as client:
-        response = await client.get(url, follow_redirects=False)
-    if len(response.content) > max_bytes:
-        raise SecurityError("RESPONSE_TOO_LARGE", f"body > {max_bytes} bytes")
-    if response.status_code >= 400:
-        raise SecurityError(
-            "HTTP_ERROR",
-            f"status {response.status_code} for {parsed.hostname}",
-        )
-    return response.content
+        async with client.stream("GET", url, follow_redirects=False) as response:
+            if response.status_code >= 400:
+                raise SecurityError(
+                    "HTTP_ERROR",
+                    f"status {response.status_code} for {parsed.hostname}",
+                )
+            chunks: list[bytes] = []
+            total = 0
+            async for chunk in response.aiter_bytes():
+                total += len(chunk)
+                if total > max_bytes:
+                    raise SecurityError("RESPONSE_TOO_LARGE", f"body > {max_bytes} bytes")
+                chunks.append(chunk)
+            return b"".join(chunks)

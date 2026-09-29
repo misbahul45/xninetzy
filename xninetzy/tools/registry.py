@@ -458,6 +458,9 @@ from xninetzy.interfaces.media.media_tools import (
 from xninetzy.tools.ecosystem.media_video_tools import (
     media_video_tools as _MEDIA_VIDEO_TOOLS,
 )
+from xninetzy.tools.ecosystem.moviepy_tools import (
+    moviepy_tools as _MOVIEPY_TOOLS,
+)
 from xninetzy.workflow.tools import (
     workflow_status,
     workflow_latest,
@@ -1009,6 +1012,7 @@ def get_all_tools() -> list[BaseTool]:
             media_ingest_to_knowledge,
             # Media (video creator / editor — deterministic, CPU-only)
             *_MEDIA_VIDEO_TOOLS,
+            *_MOVIEPY_TOOLS,
             # Multi-action workflow
             workflow_status,
             workflow_latest,
@@ -1518,5 +1522,8 @@ def get_tool_groups() -> dict[str, list[str]]:
             "video_renderer_health",
             "video_platform_targets",
             "video_validate_for_platform",
+            "moviepy_status",
+            "moviepy_reframe",
+            "moviepy_concat",
         ],
     }

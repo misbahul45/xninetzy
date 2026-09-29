@@ -115,6 +115,20 @@ class Resolution:
         return {"width": self.width, "height": self.height}
 
 
+_PRESET_RESOLUTIONS: dict[CompositionPreset, tuple[int, int]] = {
+    CompositionPreset.YOUTUBE_LANDSCAPE: (1920, 1080),
+    CompositionPreset.SHORTS_VERTICAL: (1080, 1920),
+    CompositionPreset.INSTAGRAM_VERTICAL: (1080, 1920),
+    CompositionPreset.SQUARE_SOCIAL: (1080, 1080),
+    CompositionPreset.PRESENTATION: (1920, 1080),
+}
+
+
+def resolution_for_preset(preset: CompositionPreset) -> Resolution:
+    width, height = _PRESET_RESOLUTIONS.get(preset, (1280, 720))
+    return Resolution(width, height)
+
+
 @dataclass(frozen=True, slots=True)
 class FrameTime:
     frame: int

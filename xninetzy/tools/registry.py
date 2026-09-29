@@ -1516,5 +1516,7 @@ def get_tool_groups() -> dict[str, list[str]]:
             "video_session_start",
             "video_session_stop",
             "video_renderer_health",
+            "video_platform_targets",
+            "video_validate_for_platform",
         ],
     }

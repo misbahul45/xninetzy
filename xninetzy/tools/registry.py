@@ -361,6 +361,9 @@ from xninetzy.tools.ecosystem.career_dashboard_tools import (
     career_observability_dashboard,
     career_recover_stuck_applications,
 )
+from xninetzy.tools.ecosystem.career_scraping_tools import (
+    career_scraping_tools as _CAREER_SCRAPING_TOOLS,
+)
 from xninetzy.tools.ecosystem.optimization_tools import (
     deepeval_evaluate,
     dspy_compile,
@@ -935,6 +938,7 @@ def get_all_tools() -> list[BaseTool]:
             career_close_application,
             career_observability_dashboard,
             career_recover_stuck_applications,
+            *_CAREER_SCRAPING_TOOLS,
             tasks_create,
             tasks_get,
             tasks_list,
@@ -1406,6 +1410,11 @@ def get_tool_groups() -> dict[str, list[str]]:
             "career_close_application",
             "career_observability_dashboard",
             "career_recover_stuck_applications",
+            "career_scrape_diagnose",
+            "career_scrape_run",
+            "career_clear_cache",
+            "career_validate_source",
+            "career_source_health",
         ],
         "graph": ["graph_search", "graph_get_context", "graph_explain_topic_map"],
         "skills": [
